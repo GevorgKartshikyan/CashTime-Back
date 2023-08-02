@@ -1,0 +1,30 @@
+{
+  "name": "chash-time-back",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "nodemon  --es-module-specifier-resolution=node -r dotenv/config ./bin/www.js",
+    "prod": "node  --es-module-specifier-resolution=node -r dotenv/config ./bin/www.js",
+    "migrate": "node  --es-module-specifier-resolution=node -r dotenv/config ./bin/migrate.js"
+  },
+  "dependencies": {
+    "cookie-parser": "~1.4.4",
+    "debug": "~2.6.9",
+    "dotenv": "^16.3.1",
+    "express": "~4.16.1",
+    "http-errors": "~1.6.3",
+    "jade": "~1.11.0",
+    "lodash": "^4.17.21",
+    "moment": "^2.29.4",
+    "morgan": "~1.9.1",
+    "mysql2": "^3.5.2",
+    "sequelize": "^6.32.1"
+  },
+  "devDependencies": {
+    "eslint": "^8.46.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.28.0",
+    "nodemon": "^3.0.1"
+  }
+}
