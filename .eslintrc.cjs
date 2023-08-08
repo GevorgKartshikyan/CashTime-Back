@@ -22,6 +22,8 @@ module.exports = {
     sourceType: 'module',
   },
   rules: {
+    //line errors
     'no-use-before-define': ['error', { functions: false }],
+    'linebreak-style': 0,
   },
 };
