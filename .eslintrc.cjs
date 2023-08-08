@@ -22,7 +22,7 @@ module.exports = {
     sourceType: 'module',
   },
   rules: {
-    //line errors test git
+    //line errors test git sadasd  he
     'no-use-before-define': ['error', { functions: false }],
     'linebreak-style': 0,
   },
