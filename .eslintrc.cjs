@@ -23,5 +23,6 @@ module.exports = {
   },
   rules: {
     'no-use-before-define': ['error', { functions: false }],
+    'linebreak-style': 0,
   },
 };
