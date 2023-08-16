@@ -11,9 +11,16 @@ Cvs.init({
     primaryKey: true,
     allowNull: false,
   },
-  skills:{
-
-  }
+  skills: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    get() {
+      return this.getDataValue('skills').split(';');
+    },
+    set(val) {
+      this.setDataValue('skills', val.join(';'));
+    },
+  },
 }, {
   sequelize,
   modelName: 'cvs',

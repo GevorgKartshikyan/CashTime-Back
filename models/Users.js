@@ -14,6 +14,10 @@ Users.init({
     primaryKey: true,
     allowNull: false,
   },
+  status: {
+    type: DataTypes.ENUM('pending', 'active', 'block'),
+    allowNull: false,
+  },
   email: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -54,6 +58,9 @@ Users.init({
     type: DataTypes.STRING,
     allowNull: false,
     default: '',
+  },
+  validationCode: {
+    type: DataTypes.STRING,
   },
   avatar: {
     type: DataTypes.STRING,
