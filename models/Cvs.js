@@ -11,9 +11,10 @@ Cvs.init({
     primaryKey: true,
     allowNull: false,
   },
-  skills:{
-
-  }
+  skills: {
+    type: DataTypes.JSON,
+    allowNull: true,
+  },
 }, {
   sequelize,
   modelName: 'cvs',
