@@ -93,6 +93,32 @@ class UsersController {
     }
   };
 
+  static login = async (req, res, next) => {
+    try {
+      const {
+        email, password,
+      } = req.body;
+
+      const user = await Users.findOne({
+        where: {
+          email,
+          password: Users.passwordHash(password),
+        },
+      });
+      if (!user) {
+        throw HttpError(403, 'Invalid email or password');
+      }
+      const token = jwt.sign({ userId: user.id }, JWT_SECRET);
+      res.json({
+        status: 'ok',
+        user,
+        token,
+      });
+    } catch (e) {
+      next(e);
+    }
+  };
+
   static activate = async (req, res, next) => {
     try {
       const { validationCode, email } = req.body;
