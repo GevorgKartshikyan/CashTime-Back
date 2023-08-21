@@ -12,14 +12,8 @@ Cvs.init({
     allowNull: false,
   },
   skills: {
-    type: DataTypes.STRING,
-    allowNull: false,
-    get() {
-      return this.getDataValue('skills').split(';');
-    },
-    set(val) {
-      this.setDataValue('skills', val.join(';'));
-    },
+    type: DataTypes.JSON,
+    allowNull: true,
   },
 }, {
   sequelize,
