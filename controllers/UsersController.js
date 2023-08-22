@@ -23,9 +23,10 @@ class UsersController {
     try {
       console.log(req.body);
       const {
-        email, firstName, lastName, phone, password,
+        email, password, firstName, lastName, phone,
       } = req.body;
       const { file } = req;
+      console.log(file);
       if (!email) {
         throw HttpError(400, 'Email is required');
       }
