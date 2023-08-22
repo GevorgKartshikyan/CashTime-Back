@@ -109,6 +109,7 @@ class UsersController {
         throw HttpError(403, 'Invalid email or password');
       }
       const token = jwt.sign({ userId: user.id }, JWT_SECRET);
+
       res.json({
         status: 'ok',
         user,
