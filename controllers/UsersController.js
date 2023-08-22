@@ -10,8 +10,18 @@ import Mail from '../services/Mail';
 const { JWT_SECRET } = process.env;
 
 class UsersController {
+  static register2 = async (req, res, next) => {
+    try {
+      const { firstName } = req.body;
+      console.log(firstName);
+    } catch (e) {
+      next(e);
+    }
+  };
+
   static register = async (req, res, next) => {
     try {
+      console.log(req.body);
       const {
         email, firstName, lastName, phone, password,
       } = req.body;
