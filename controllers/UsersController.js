@@ -13,9 +13,10 @@ class UsersController {
   static register = async (req, res, next) => {
     try {
       const {
-        email, firstName, lastName, phone, password,
+        email, password, firstName, lastName, phone,
       } = req.body;
       const { file } = req;
+      console.log(file);
       if (!email) {
         throw HttpError(400, 'Email is required');
       }

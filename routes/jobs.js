@@ -1,10 +1,9 @@
 import express from 'express';
 import multer from 'multer';
 import HttpError from 'http-errors';
-import UsersController from '../controllers/UsersController';
+import JobsController from '../controllers/JobsController';
 
 const router = express.Router();
-
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
@@ -18,8 +17,5 @@ const upload = multer({
     }
   },
 });
-
-router.post('/register', upload.single('avatar'), UsersController.register);
-router.post('/activate', UsersController.activate);
-
+router.post('/create-job', upload.single('jobImage'), JobsController.createJob);
 export default router;
