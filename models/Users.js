@@ -56,7 +56,7 @@ Users.init({
   },
   phone: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
     default: '',
   },
   validationCode: {

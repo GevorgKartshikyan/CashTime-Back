@@ -12,8 +12,8 @@ Cvs.init({
     allowNull: false,
   },
   skills: {
-    type: DataTypes.STRING,
-    allowNull: false,
+    type: DataTypes.JSON,
+    allowNull: true,
   },
 }, {
   sequelize,

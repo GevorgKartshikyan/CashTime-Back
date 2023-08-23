@@ -13,9 +13,10 @@ class UsersController {
   static register = async (req, res, next) => {
     try {
       const {
-        email, firstName, lastName, phone, password,
+        email, password, firstName, lastName, phone,
       } = req.body;
       const { file } = req;
+      console.log(file);
       if (!email) {
         throw HttpError(400, 'Email is required');
       }
@@ -86,6 +87,33 @@ class UsersController {
       res.json({
         status: 'ok',
         user,
+      });
+    } catch (e) {
+      next(e);
+    }
+  };
+
+  static login = async (req, res, next) => {
+    try {
+      const {
+        email, password,
+      } = req.body;
+
+      const user = await Users.findOne({
+        where: {
+          email,
+          password: Users.passwordHash(password),
+        },
+      });
+      if (!user) {
+        throw HttpError(403, 'Invalid email or password');
+      }
+      const token = jwt.sign({ userId: user.id }, JWT_SECRET);
+
+      res.json({
+        status: 'ok',
+        user,
+        token,
       });
     } catch (e) {
       next(e);
