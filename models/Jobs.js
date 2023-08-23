@@ -14,7 +14,7 @@ Jobs.init({
   },
   title: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
     default: '',
   },
   skills: {
@@ -52,9 +52,33 @@ Jobs.init({
     allowNull: true,
     default: '',
   },
+  geometry: {
+    type: DataTypes.GEOMETRY('POINT'),
+    allowNull: true,
+    defaultValue: null,
+  },
   status: {
     type: DataTypes.ENUM('active', 'pending'),
     allowNull: false,
+  },
+  alreadyDone: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  },
+  country: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    default: '',
+  },
+  fullAddress: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    default: '',
+  },
+  city: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    default: '',
   },
 }, {
   sequelize,
