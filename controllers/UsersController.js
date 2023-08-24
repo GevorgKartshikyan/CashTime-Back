@@ -101,6 +101,33 @@ class UsersController {
     }
   };
 
+  static login = async (req, res, next) => {
+    try {
+      const {
+        email, password,
+      } = req.body;
+
+      const user = await Users.findOne({
+        where: {
+          email,
+          password: Users.passwordHash(password),
+        },
+      });
+      if (!user) {
+        throw HttpError(403, 'Invalid email or password');
+      }
+      const token = jwt.sign({ userId: user.id }, JWT_SECRET);
+
+      res.json({
+        status: 'ok',
+        user,
+        token,
+      });
+    } catch (e) {
+      next(e);
+    }
+  };
+
   static activate = async (req, res, next) => {
     try {
       const { validationCode, email } = req.body;
@@ -123,6 +150,30 @@ class UsersController {
         status: 'ok',
         user,
         token,
+      });
+    } catch (e) {
+      next(e);
+    }
+  };
+
+  static list = async (req, res, next) => {
+    try {
+      const { page = 1, limit = 5 } = req.query;
+      if (Number.isNaN(+page) || Number.isNaN(+limit)) {
+        throw HttpError(400, 'Page or limit is not a number');
+      }
+      const count = await Users.count();
+      const totalPages = Math.ceil(count / limit);
+      const offset = (+page - 1) * +limit;
+      const usersList = await Users.findAll({
+        limit: +limit,
+        offset,
+      });
+      res.json({
+        status: 'ok',
+        totalUsers: count,
+        totalPages,
+        users: usersList,
       });
     } catch (e) {
       next(e);
