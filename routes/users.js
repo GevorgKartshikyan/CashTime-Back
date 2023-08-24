@@ -20,6 +20,7 @@ const upload = multer({
 });
 
 router.post('/register', upload.single('avatar'), UsersController.register);
+router.get('/list', UsersController.list);
 router.post('/activate', UsersController.activate);
 router.get('/list', UsersController.list);
 router.post('/login', UsersController.login);
