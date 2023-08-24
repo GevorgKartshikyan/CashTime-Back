@@ -150,6 +150,7 @@ class UsersController {
 
   static list = async (req, res, next) => {
     try {
+      const { role } = req.body;
       const { page = 1, limit = 5 } = req.query;
       if (Number.isNaN(+page) || Number.isNaN(+limit)) {
         throw HttpError(400, 'Page or limit is not a number');
@@ -158,6 +159,9 @@ class UsersController {
       const totalPages = Math.ceil(count / limit);
       const offset = (+page - 1) * +limit;
       const usersList = await Users.findAll({
+        where: {
+          role,
+        },
         limit: +limit,
         offset,
       });
