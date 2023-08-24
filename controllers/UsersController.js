@@ -179,6 +179,38 @@ class UsersController {
       next(e);
     }
   };
+
+  static singleUser = async (req, res, next) => {
+    try {
+      const { userId } = req.params;
+
+      const user = await Users.findByPk(userId);
+      if (!user) {
+        throw HttpError(404);
+      }
+      res.json({
+        status: 'ok',
+        user,
+      });
+    } catch (e) {
+      next(e);
+    }
+  };
+
+  static profile = async (req, res, next) => {
+    try {
+      const { userId } = req;
+
+      const user = await Users.findByPk(userId);
+
+      res.json({
+        status: 'ok',
+        user,
+      });
+    } catch (e) {
+      next(e);
+    }
+  };
 }
 
 export default UsersController;
