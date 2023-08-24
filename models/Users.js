@@ -52,7 +52,15 @@ Users.init({
   location: {
     type: DataTypes.GEOMETRY('POINT'),
     allowNull: true,
-    default: {},
+    default: null,
+  },
+  country: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  city: {
+    type: DataTypes.STRING,
+    allowNull: true,
   },
   phone: {
     type: DataTypes.STRING,
