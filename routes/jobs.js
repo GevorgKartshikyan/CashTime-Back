@@ -1,0 +1,28 @@
+import express from 'express';
+import multer from 'multer';
+import HttpError from 'http-errors';
+import JobsController from '../controllers/JobsController';
+
+const router = express.Router();
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 1024 * 1024 * 10,
+  },
+  fileFilter: (req, file, cb) => {
+    if (['image/png', 'image/jpeg', 'image/webp'].includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(HttpError(422, 'Invalid file type'), false);
+    }
+  },
+});
+router.post('/job-create', upload.single('jobImage'), JobsController.createJob);
+router.get('/list-admin', JobsController.allJobListFromAdmin);
+router.post('/jobs-list', JobsController.jobsListFromUsers);
+router.post('/job-done', JobsController.jobDone);
+router.post('/job-activate', JobsController.activateJob);
+router.post('/job-delete', JobsController.deleteJob);
+router.post('/job-edit', upload.single('jobImage'), JobsController.editJob);
+export default router;
