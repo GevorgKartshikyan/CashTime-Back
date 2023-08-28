@@ -19,7 +19,6 @@ class UsersController {
       let location = null;
       let city = null;
       let country = null;
-      console.log(address);
       if (address.latitude && address.longitude && address) {
         location = {
           type: 'Point',
@@ -27,7 +26,6 @@ class UsersController {
         };
         city = address.city;
         country = address.country;
-        console.log('aaaaaaaaaaaaa');
       }
       if (!email) {
         throw HttpError(400, 'Email is required');
