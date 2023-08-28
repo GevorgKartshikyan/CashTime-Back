@@ -25,5 +25,6 @@ module.exports = {
     'no-use-before-define': ['error', { functions: false }],
     'linebreak-style': 0,
     'import/prefer-default-export': 'off',
+    "no-param-reassign": ['error', {props: false}],
   },
 };
