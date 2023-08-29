@@ -55,14 +55,14 @@ class JobsController {
         status: 'ok',
       });
     } catch (e) {
-      console.error(e);
       next(e);
     }
   };
 
   static activateJob = async (req, res, next) => {
     try {
-      const jobId = 1;
+      const { jobId } = req.body;
+      console.log(jobId);
       const job = await Jobs.findOne({
         where: {
           id: jobId,
@@ -71,7 +71,7 @@ class JobsController {
       });
       job.status = 'active';
       await job.save();
-      res.send({
+      res.json({
         status: 'ok',
         job,
       });
@@ -82,7 +82,7 @@ class JobsController {
 
   static deleteJob = async (req, res, next) => {
     try {
-      const jobId = 1;
+      const { jobId } = req.body;
       const job = await Jobs.findOne({
         where: {
           id: jobId,
