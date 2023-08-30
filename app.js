@@ -6,7 +6,6 @@ import logger from 'morgan';
 
 import indexRouter from './routes/index';
 import cors from './middlewares/cors';
-import userAuthorization from './middlewares/authorization';
 
 const app = express();
 
@@ -16,7 +15,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.resolve('public')));
-app.use(userAuthorization);
 app.use('/', indexRouter);
 
 // catch 404 and forward to error handler
