@@ -11,12 +11,23 @@ const { JWT_SECRET } = process.env;
 class UsersController {
   static register = async (req, res, next) => {
     try {
-      console.log(req.body);
-      const {
-        email, password, firstName, lastName, phone,
-      } = req.body;
       const { file } = req;
-      console.log(file);
+      const {
+        email, password, firstName, lastName, phone, role, address,
+      } = req.body;
+      let location = null;
+      let city = null;
+      let country = null;
+      console.log(address);
+      if (address.latitude && address.longitude && address) {
+        location = {
+          type: 'Point',
+          coordinates: [address.longitude, address.latitude],
+        };
+        city = address.city;
+        country = address.country;
+        console.log('aaaaaaaaaaaaa');
+      }
       if (!email) {
         throw HttpError(400, 'Email is required');
       }
@@ -50,12 +61,6 @@ class UsersController {
         }
       }
 
-      const role = 'employer';
-      const location = {
-        type: 'Point',
-        coordinates: [39.807222, -76.984722],
-      };
-
       const validationCode = _.random(1000, 9999);
 
       await Mail.send(email, 'Account Activation', 'userActivation', {
@@ -77,6 +82,8 @@ class UsersController {
         firstName,
         lastName,
         location,
+        city,
+        country,
         phone,
         password,
         role,
@@ -150,22 +157,72 @@ class UsersController {
 
   static list = async (req, res, next) => {
     try {
-      const { page = 1, limit = 5 } = req.query;
+      const {
+        page = 1, limit = 5, role, search,
+      } = req.query;
+      console.log(role);
       if (Number.isNaN(+page) || Number.isNaN(+limit)) {
         throw HttpError(400, 'Page or limit is not a number');
       }
-      const count = await Users.count();
+      const where = {};
+      if (search) {
+        where.$or = [
+          { firstName: { $like: `%${search}%` } },
+          { lastName: { $like: `%${search}%` } },
+          { email: { $like: `%${search}%` } },
+        ];
+      }
+
+      where.role = role;
+      const count = await Users.count({
+        where,
+      });
+
       const totalPages = Math.ceil(count / limit);
       const offset = (+page - 1) * +limit;
       const usersList = await Users.findAll({
         limit: +limit,
         offset,
+        where,
       });
       res.json({
         status: 'ok',
         totalUsers: count,
         totalPages,
+        currentPage: +page,
         users: usersList,
+      });
+    } catch (e) {
+      next(e);
+    }
+  };
+
+  static singleUser = async (req, res, next) => {
+    try {
+      const { userId } = req.params;
+
+      const user = await Users.findByPk(userId);
+      if (!user) {
+        throw HttpError(404);
+      }
+      res.json({
+        status: 'ok',
+        user,
+      });
+    } catch (e) {
+      next(e);
+    }
+  };
+
+  static profile = async (req, res, next) => {
+    try {
+      const { userId } = req;
+
+      const user = await Users.findByPk(userId);
+
+      res.json({
+        status: 'ok',
+        user,
       });
     } catch (e) {
       next(e);
