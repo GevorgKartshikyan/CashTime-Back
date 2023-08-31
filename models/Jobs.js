@@ -99,5 +99,11 @@ Users.hasMany(Jobs, {
   onDelete: 'cascade',
   onUpdate: 'cascade',
 });
+Users.hasOne(Jobs, {
+  foreignKey: 'userId',
+  as: 'createdJob',
+  onDelete: 'cascade',
+  onUpdate: 'cascade',
+});
 
 export default Jobs;
