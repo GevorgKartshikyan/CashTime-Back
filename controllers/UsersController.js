@@ -14,33 +14,42 @@ class UsersController {
     try {
       const { file } = req;
       const {
-        email, password, firstName, lastName, phone, role, address,
+        email, password, firstName, lastName, phone, role = 'employer', address, confirmPassword, type,
       } = req.body;
       let location = null;
       let city = null;
       let country = null;
-      if (address.latitude && address.longitude && address) {
-        location = {
-          type: 'Point',
-          coordinates: [address.longitude, address.latitude],
-        };
-        city = address.city;
-        country = address.country;
+      if (!type) {
+        if (address.latitude && address.longitude && address) {
+          location = {
+            type: 'Point',
+            coordinates: [address.longitude, address.latitude],
+          };
+          city = address.city;
+          country = address.country;
+        }
       }
-      if (!email) {
+      if (!email && !type) {
         throw HttpError(400, 'Email is required');
       }
-
-      if (!firstName) {
+      if (!firstName && !type) {
         throw HttpError(400, 'Firstname is required');
       }
 
-      if (!lastName) {
+      if (!lastName && !type) {
         throw HttpError(400, 'Lastname is required');
       }
 
-      if (!password) {
+      if (!password && !type) {
         throw HttpError(400, 'Password is required');
+      }
+
+      if (!confirmPassword && !type) {
+        throw HttpError(400, 'Confirm password');
+      }
+
+      if (password !== confirmPassword && !type) {
+        throw HttpError(400, 'Password is different');
       }
       const exists = await Users.findOne({
         attributes: ['id', 'status'],
@@ -52,22 +61,20 @@ class UsersController {
         if (exists.status === 'pending') {
           await exists.destroy();
         } else {
-          throw HttpError(422, {
-            errors: {
-              email: 'This email is already registered',
-            },
-          });
+          throw HttpError(400, 'This email is already registered');
         }
       }
 
       const validationCode = _.random(1000, 9999);
 
-      await Mail.send(email, 'Account Activation', 'userActivation', {
-        email,
-        firstName,
-        lastName,
-        validationCode,
-      });
+      if (!type) {
+        await Mail.send(email, 'Account Activation', 'userActivation', {
+          email,
+          firstName,
+          lastName,
+          validationCode,
+        });
+      }
 
       let avatar;
       if (file) {
@@ -75,7 +82,6 @@ class UsersController {
         const filePath = path.resolve(path.join('public', avatar));
         fs.writeFileSync(filePath, file.buffer);
       }
-
       const user = await Users.create({
         email,
         firstName,
@@ -87,7 +93,7 @@ class UsersController {
         password,
         role,
         validationCode,
-        status: 'pending',
+        status: type ? 'active' : 'pending',
         avatar,
       });
       res.json({
@@ -129,6 +135,7 @@ class UsersController {
   static activate = async (req, res, next) => {
     try {
       const { validationCode, email } = req.body;
+      console.log(validationCode, email);
       const user = await Users.findOne({
         where: {
           email,

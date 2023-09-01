@@ -20,7 +20,7 @@ const upload = multer({
 });
 router.post('/job-create', upload.single('jobImage'), JobsController.createJob);
 router.get('/list-admin', JobsController.allJobListFromAdmin);
-router.post('/jobs-list', JobsController.jobsListFromUsers);
+router.get('/jobs-list', JobsController.jobsListFromUsers);
 router.post('/job-done', JobsController.jobDone);
 router.post('/job-activate', JobsController.activateJob);
 router.post('/job-delete', JobsController.deleteJob);

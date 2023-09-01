@@ -42,7 +42,7 @@ Users.init({
   },
   password: {
     type: DataTypes.CHAR(32),
-    allowNull: false,
+    allowNull: true,
     set(val) {
       if (val) {
         this.setDataValue('password', Users.passwordHash(val));

@@ -138,15 +138,22 @@ class JobsController {
         status: 'active',
       };
 
-      const jobs = await Jobs.findAll({
-        where: whereCondition,
-        offset,
-        limit: +limit,
-      });
-
-      const count = await Jobs.count({
-        where: whereCondition,
-      });
+      const { count, rows: jobs } = await Jobs.findAndCountAll(
+        {
+          where: whereCondition,
+          offset,
+          limit: +limit,
+          include: [
+            {
+              model: Users,
+              as: 'creator',
+              attributes: ['firstName', 'lastName', 'avatar'],
+              required: false,
+            },
+          ],
+          raw: true,
+        },
+      );
 
       const totalPages = Math.ceil(count / limit);
 
