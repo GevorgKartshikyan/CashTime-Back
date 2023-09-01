@@ -8,7 +8,6 @@ import Users from '../models/Users';
 import Mail from '../services/Mail';
 
 const { JWT_SECRET } = process.env;
-
 class UsersController {
   static register = async (req, res, next) => {
     try {
@@ -163,25 +162,39 @@ class UsersController {
 
   static list = async (req, res, next) => {
     try {
-      const { role } = req.body;
-      const { page = 1, limit = 5 } = req.query;
+      const {
+        page = 1, limit = 5, role, search,
+      } = req.query;
+      console.log(req.query);
+      console.log(role);
       if (Number.isNaN(+page) || Number.isNaN(+limit)) {
         throw HttpError(400, 'Page or limit is not a number');
       }
-      const count = await Users.count();
+      const where = {};
+      if (search) {
+        where.$or = [
+          { firstName: { $like: `%${search}%` } },
+          { lastName: { $like: `%${search}%` } },
+          { email: { $like: `%${search}%` } },
+        ];
+      }
+
+      where.role = role;
+      const count = await Users.count({
+        where,
+      });
       const totalPages = Math.ceil(count / limit);
       const offset = (+page - 1) * +limit;
       const usersList = await Users.findAll({
-        where: {
-          role,
-        },
         limit: +limit,
         offset,
+        where,
       });
       res.json({
         status: 'ok',
         totalUsers: count,
         totalPages,
+        currentPage: +page,
         users: usersList,
       });
     } catch (e) {
