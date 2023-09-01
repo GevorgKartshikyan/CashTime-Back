@@ -14,6 +14,13 @@ Users.init({
     primaryKey: true,
     allowNull: false,
   },
+  isOnline: {
+    type: DataTypes.BOOLEAN,
+  },
+  lastVisit: {
+    type: DataTypes.DATE,
+    allowNull: true,
+  },
   status: {
     type: DataTypes.ENUM('pending', 'active', 'block'),
     allowNull: false,
@@ -35,7 +42,7 @@ Users.init({
   },
   password: {
     type: DataTypes.CHAR(32),
-    allowNull: false,
+    allowNull: true,
     set(val) {
       if (val) {
         this.setDataValue('password', Users.passwordHash(val));
