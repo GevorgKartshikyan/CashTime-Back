@@ -108,15 +108,29 @@ class UsersController {
   static login = async (req, res, next) => {
     try {
       const {
-        email, password,
+        email, password, type,
       } = req.body;
 
-      const user = await Users.findOne({
-        where: {
-          email,
-          password: Users.passwordHash(password),
-        },
-      });
+      let user;
+
+      if (!type) {
+        user = await Users.findOne({
+          where: {
+            email,
+            password: Users.passwordHash(password),
+          },
+        });
+      } else {
+        console.log('a');
+        user = await Users.findOne({
+          where: {
+            email,
+          },
+        });
+      }
+
+      console.log(user);
+
       if (!user) {
         throw HttpError(403, 'Invalid email or password');
       }
