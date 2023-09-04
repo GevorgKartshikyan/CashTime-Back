@@ -19,7 +19,6 @@ class UsersController {
       let location = null;
       let city = null;
       let country = null;
-      console.log(address);
       if (address.latitude && address.longitude && address) {
         location = {
           type: 'Point',
