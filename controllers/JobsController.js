@@ -5,6 +5,45 @@ import HttpError from 'http-errors';
 import { Users, Jobs } from '../models/index';
 
 class JobsController {
+  static jobsListFromUsersBox = async (req, res, next) => {
+    try {
+      const { page = 1, limit = 5 } = req.query;
+      const offset = (page - 1) * limit;
+      const {
+        title, experience_level: experienceLevel, job_type: jobType, date, tags,
+      } = req.body;
+      console.log(title, experienceLevel, jobType, date, tags);
+      const where = {
+        status: 'active',
+      };
+      if (title) {
+        where.title = { $like: `%${title}%` };
+      }
+      const { count, rows: jobs } = await Jobs.findAndCountAll({
+        where,
+        offset,
+        limit: +limit,
+        include: [
+          {
+            model: Users,
+            as: 'creator',
+            attributes: ['firstName', 'lastName', 'avatar'],
+            required: false,
+          },
+        ],
+        raw: true,
+      });
+      const totalPages = Math.ceil(count / limit);
+      res.json({
+        jobs,
+        currentPage: +page,
+        totalPages,
+      });
+    } catch (e) {
+      next(e);
+    }
+  };
+
   static createJob = async (req, res, next) => {
     try {
       const { file } = req;
@@ -102,6 +141,8 @@ class JobsController {
     try {
       const { page = 1, limit = 5 } = req.query;
       const offset = (page - 1) * limit;
+      console.log(req.body, 'body');
+      console.log(req.query, 'query');
       const { count, rows: jobs } = await Jobs.findAndCountAll({
         where: {
           status: 'pending',
@@ -129,20 +170,17 @@ class JobsController {
     }
   };
 
-  static jobsListFromUsers = async (req, res, next) => {
+  static jobsListFromUsersMap = async (req, res, next) => {
     try {
-      const { page = 1, limit = 20 } = req.query;
-      const offset = (page - 1) * limit;
+      const { city } = req.query;
       const whereCondition = {
         alreadyDone: false,
         status: 'active',
+        city,
       };
-
-      const { count, rows: jobs } = await Jobs.findAndCountAll(
+      const { rows: jobs } = await Jobs.findAndCountAll(
         {
           where: whereCondition,
-          offset,
-          limit: +limit,
           include: [
             {
               model: Users,
@@ -154,13 +192,8 @@ class JobsController {
           raw: true,
         },
       );
-
-      const totalPages = Math.ceil(count / limit);
-
       res.json({
         jobs,
-        currentPage: +page,
-        totalPages,
       });
     } catch (e) {
       next(e);
