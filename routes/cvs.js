@@ -18,5 +18,5 @@ const upload = multer({
     }
   },
 });
-router.post('/create-cv', upload.single('jobImage'), CvsController.createCv);
+router.post('/create-cv', upload.single('avatar'), CvsController.createCv);
 export default router;
