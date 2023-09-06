@@ -47,13 +47,13 @@ Cvs.init({
     allowNull: true,
     default: '',
   },
-  services: {
+  category: {
     type: DataTypes.STRING,
     allowNull: true,
     default: '',
   },
   hourlyRate: {
-    type: DataTypes.INTEGER.UNSIGNED,
+    type: DataTypes.STRING,
     allowNull: true,
     default: '',
   },
