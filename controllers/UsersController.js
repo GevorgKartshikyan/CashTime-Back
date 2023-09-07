@@ -80,6 +80,8 @@ class UsersController {
         avatar = path.join(`/images/users/${uuidV4()}_${file.originalname}`);
         const filePath = path.resolve(path.join('public', avatar));
         fs.writeFileSync(filePath, file.buffer);
+      } else {
+        avatar = path.join('/images/users/default-avatar-icon.jpg');
       }
       const user = await Users.create({
         email,
@@ -95,9 +97,14 @@ class UsersController {
         status: type ? 'active' : 'pending',
         avatar,
       });
+      let token;
+      if (type) {
+        token = jwt.sign({ userId: user.id }, JWT_SECRET);
+      }
       res.json({
         status: 'ok',
         user,
+        token,
       });
     } catch (e) {
       next(e);
@@ -117,18 +124,16 @@ class UsersController {
           where: {
             email,
             password: Users.passwordHash(password),
+            status: 'active',
           },
         });
       } else {
-        console.log('a');
         user = await Users.findOne({
           where: {
             email,
           },
         });
       }
-
-      console.log(user);
 
       if (!user) {
         throw HttpError(403, 'Invalid email or password');
@@ -148,7 +153,6 @@ class UsersController {
   static activate = async (req, res, next) => {
     try {
       const { validationCode, email } = req.body;
-      console.log(validationCode, email);
       const user = await Users.findOne({
         where: {
           email,
@@ -179,8 +183,6 @@ class UsersController {
       const {
         page = 1, limit = 5, role, search,
       } = req.query;
-      console.log(req.query);
-      console.log(role);
       if (Number.isNaN(+page) || Number.isNaN(+limit)) {
         throw HttpError(400, 'Page or limit is not a number');
       }
