@@ -25,7 +25,7 @@ class JobsController {
         where.experience = { $in: experienceLevelArray };
       }
 
-      // price method and price
+      // price method && price
       const priceMethod = [jobType.hourly, jobType.fixed].filter((value) => value !== '');
       if (priceMethod.length > 0) {
         where.priceMethod = { $in: priceMethod };
