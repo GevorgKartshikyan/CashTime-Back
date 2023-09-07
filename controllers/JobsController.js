@@ -10,14 +10,44 @@ class JobsController {
       const { page = 1, limit = 5 } = req.query;
       const offset = (page - 1) * limit;
       const {
-        title, experience_level: experienceLevel, job_type: jobType, date, tags,
+        title, experience_level: experienceLevel = {}, job_type: jobType, date, tags,
       } = req.body;
-      console.log(title, experienceLevel, jobType, date, tags);
       const where = {
         status: 'active',
+        alreadyDone: false,
       };
       if (title) {
         where.title = { $like: `%${title}%` };
+      }
+      // experienceLevel
+      const experienceLevelArray = Object.values(experienceLevel).filter((value) => value !== '' && value !== null && value !== undefined);
+      if (experienceLevelArray.length > 0) {
+        where.experience = { $in: experienceLevelArray };
+      }
+
+      // price method and price
+      const priceMethod = [jobType.hourly, jobType.fixed].filter((value) => value !== '');
+      if (priceMethod.length > 0) {
+        where.priceMethod = { $in: priceMethod };
+      }
+      const minPriceFixed = +jobType.salary_min;
+      const maxPriceFixed = +jobType.salary_max;
+      const maxPriceHourly = +jobType.hour_max;
+      const minPriceHourly = +jobType.hour_min;
+      console.log(minPriceFixed, 'min', maxPriceFixed, 'max');
+      // eslint-disable-next-line max-len
+      if (maxPriceFixed && minPriceFixed && !Number.isNaN(maxPriceFixed) && !Number.isNaN(minPriceFixed)) {
+        where.priceFixed = {
+          $between: [minPriceFixed, maxPriceFixed],
+        };
+      } else if (minPriceFixed && !Number.isNaN(minPriceFixed)) {
+        where.priceFixed = {
+          $gte: minPriceFixed,
+        };
+      } else if (maxPriceFixed && !Number.isNaN(maxPriceFixed)) {
+        where.priceFixed = {
+          $lte: maxPriceFixed,
+        };
       }
       const { count, rows: jobs } = await Jobs.findAndCountAll({
         where,
@@ -74,12 +104,16 @@ class JobsController {
         jobPhoto = path.join('/images/jobs/default-job-image.jpg');
       }
       const { city, country, fullAddress } = address;
+      console.log(price, 'price');
       const job = await Jobs.create({
-        userId: 1,
+        userId: 8,
         title,
         skills,
         experience,
-        price,
+        priceMethod: price.method,
+        priceFixed: price.maxPrice,
+        priceMinHourly: price.priceFrom,
+        priceMaxHourly: price.priceTo,
         description,
         geometry: location,
         phoneNumber,
@@ -141,8 +175,6 @@ class JobsController {
     try {
       const { page = 1, limit = 5 } = req.query;
       const offset = (page - 1) * limit;
-      console.log(req.body, 'body');
-      console.log(req.query, 'query');
       const { count, rows: jobs } = await Jobs.findAndCountAll({
         where: {
           status: 'pending',
