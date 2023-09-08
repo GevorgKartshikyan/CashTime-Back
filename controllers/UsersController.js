@@ -15,6 +15,7 @@ class UsersController {
       const {
         email, password, firstName, lastName, phone, role = 'employer', address, confirmPassword, type,
       } = req.body;
+      console.log(req.body , 'body');
       let location = null;
       let city = null;
       let country = null;

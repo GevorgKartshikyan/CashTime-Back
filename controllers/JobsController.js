@@ -2,12 +2,13 @@ import path from 'path';
 import fs from 'fs';
 import { v4 as uuidV4 } from 'uuid';
 import HttpError from 'http-errors';
+import { log } from 'debug';
 import { Users, Jobs } from '../models/index';
 
 class JobsController {
   static jobsListFromUsersBox = async (req, res, next) => {
     try {
-      const { page = 1, limit = 5 } = req.query;
+      const { page = 1, limit = 5, city = '' } = req.query;
       const offset = (page - 1) * limit;
       const {
         title, experience_level: experienceLevel = {}, job_type: jobType, date, tags,
@@ -30,23 +31,45 @@ class JobsController {
       if (priceMethod.length > 0) {
         where.priceMethod = { $in: priceMethod };
       }
+      console.log(priceMethod);
       const minPriceFixed = +jobType.salary_min;
       const maxPriceFixed = +jobType.salary_max;
       const maxPriceHourly = +jobType.hour_max;
       const minPriceHourly = +jobType.hour_min;
-      console.log(minPriceFixed, 'min', maxPriceFixed, 'max');
       // eslint-disable-next-line max-len
-      if (maxPriceFixed && minPriceFixed && !Number.isNaN(maxPriceFixed) && !Number.isNaN(minPriceFixed)) {
+      if (maxPriceFixed && minPriceFixed && !Number.isNaN(maxPriceFixed) && !Number.isNaN(minPriceFixed) && priceMethod.includes('Project Budget')) {
         where.priceFixed = {
           $between: [minPriceFixed, maxPriceFixed],
         };
-      } else if (minPriceFixed && !Number.isNaN(minPriceFixed)) {
+      } else if (minPriceFixed && !Number.isNaN(minPriceFixed) && priceMethod.includes('Project Budget')) {
         where.priceFixed = {
           $gte: minPriceFixed,
         };
-      } else if (maxPriceFixed && !Number.isNaN(maxPriceFixed)) {
+      } else if (maxPriceFixed && !Number.isNaN(maxPriceFixed) && priceMethod.includes('Project Budget')) {
         where.priceFixed = {
           $lte: maxPriceFixed,
+        };
+      }
+
+      if (minPriceHourly && !Number.isNaN(minPriceHourly) && priceMethod.includes('Hourly Rate')) {
+        where.priceMinHourly = {
+          $gte: minPriceHourly,
+        };
+      }
+      if (maxPriceHourly && !Number.isNaN(maxPriceHourly) && priceMethod.includes('Hourly Rate')) {
+        where.priceMaxHourly = {
+          $lte: maxPriceHourly,
+        };
+      }
+      // location 'city'
+      if (city) {
+        where.city = city;
+      }
+      console.log(date, 'date');
+      // date
+      if (date.from && date.to) {
+        where.createdAt = {
+          $between: [date.from, date.to],
         };
       }
       const { count, rows: jobs } = await Jobs.findAndCountAll({
@@ -58,7 +81,7 @@ class JobsController {
             model: Users,
             as: 'creator',
             attributes: ['firstName', 'lastName', 'avatar'],
-            required: false,
+            required: true,
           },
         ],
         raw: true,
