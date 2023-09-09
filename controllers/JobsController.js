@@ -2,7 +2,6 @@ import path from 'path';
 import fs from 'fs';
 import { v4 as uuidV4 } from 'uuid';
 import HttpError from 'http-errors';
-import { log } from 'debug';
 import { Users, Jobs } from '../models/index';
 
 class JobsController {
@@ -10,12 +9,14 @@ class JobsController {
     try {
       const { page = 1, limit = 5, city = '' } = req.query;
       const offset = (page - 1) * limit;
+      const { userId } = req;
       const {
         title, experience_level: experienceLevel = {}, job_type: jobType, date, tags,
       } = req.body;
       const where = {
         status: 'active',
         alreadyDone: false,
+        userId: !userId,
       };
       if (title) {
         where.title = { $like: `%${title}%` };
@@ -99,7 +100,7 @@ class JobsController {
 
   static createJob = async (req, res, next) => {
     try {
-      const { file } = req;
+      const { file, userId } = req;
       const body = JSON.parse(req.body.data);
       const {
         dataFromChild1: title,
@@ -129,7 +130,7 @@ class JobsController {
       const { city, country, fullAddress } = address;
       console.log(price, 'price');
       const job = await Jobs.create({
-        userId: 8,
+        userId,
         title,
         skills,
         experience,
