@@ -7,7 +7,9 @@ import { Users, Jobs } from '../models/index';
 class JobsController {
   static jobsListFromUsersBox = async (req, res, next) => {
     try {
-      const { page = 1, limit = 5, city = '' } = req.query;
+      const {
+        page = 1, limit = 5, city = '', order,
+      } = req.query;
       const offset = (page - 1) * limit;
       const { userId } = req;
       const {
@@ -16,7 +18,7 @@ class JobsController {
       const where = {
         status: 'active',
         alreadyDone: false,
-        userId: !userId,
+        // userId: !userId,
       };
       if (title) {
         where.title = { $like: `%${title}%` };
@@ -32,7 +34,6 @@ class JobsController {
       if (priceMethod.length > 0) {
         where.priceMethod = { $in: priceMethod };
       }
-      console.log(priceMethod);
       const minPriceFixed = +jobType.salary_min;
       const maxPriceFixed = +jobType.salary_max;
       const maxPriceHourly = +jobType.hour_max;
@@ -66,17 +67,27 @@ class JobsController {
       if (city) {
         where.city = city;
       }
-      console.log(date, 'date');
       // date
       if (date.from && date.to) {
         where.createdAt = {
           $between: [date.from, date.to],
         };
       }
+      // order
+      let orderBy;
+      if (order === 'Newest') {
+        orderBy = [['createdAt', 'DESC']];
+      } else if (order === 'Latest') {
+        orderBy = [['createdAt', 'ASC']];
+      } else {
+        orderBy = [['createdAt', 'DESC']];
+      }
+
       const { count, rows: jobs } = await Jobs.findAndCountAll({
         where,
         offset,
         limit: +limit,
+        order: orderBy,
         include: [
           {
             model: Users,
