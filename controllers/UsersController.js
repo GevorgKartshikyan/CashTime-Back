@@ -177,14 +177,19 @@ class UsersController {
   static list = async (req, res, next) => {
     try {
       const {
-        page = 1, limit = 5, role, search,
+        page = 1, limit = 5, role, search, id = undefined,
       } = req.query;
-      console.log(req.query);
-      console.log(role);
+      console.log(id, 'jgh');
+      // console.log(req.query);
+      // console.log(role);
       if (Number.isNaN(+page) || Number.isNaN(+limit)) {
         throw HttpError(400, 'Page or limit is not a number');
       }
-      const where = {};
+      const where = {
+        status: {
+          $ne: 'pending',
+        },
+      };
       if (search) {
         where.$or = [
           { firstName: { $like: `%${search}%` } },
@@ -204,6 +209,18 @@ class UsersController {
         offset,
         where,
       });
+
+      let user = {};
+      if (id) {
+        user = await Users.findByPk(id);
+        if (user.status === 'active') {
+          user.status = 'block';
+        } else {
+          user.status = 'active';
+        }
+        await user.save();
+      }
+      console.log(user, 'user');
       res.json({
         status: 'ok',
         totalUsers: count,
@@ -238,6 +255,30 @@ class UsersController {
       const { userId } = req;
 
       const user = await Users.findByPk(userId);
+
+      res.json({
+        status: 'ok',
+        user,
+      });
+    } catch (e) {
+      next(e);
+    }
+  };
+
+  static status = async (req, res, next) => {
+    try {
+      const {
+        id,
+      } = req.body;
+      const user = await Users.findByPk(id);
+      if (user.status === 'active') {
+        user.status = 'block';
+      } else {
+        user.status = 'active';
+      }
+      await user.save();
+
+      console.log(user);
 
       res.json({
         status: 'ok',
