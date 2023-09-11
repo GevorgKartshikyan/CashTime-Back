@@ -1,5 +1,5 @@
 import {
-  Users, Jobs, Cvs, Messages,
+  Users, Jobs, Cvs, Messages, Reports,
 } from '../models/index';
 
 async function main() {
@@ -7,6 +7,7 @@ async function main() {
   await Jobs.sync({ alter: true });
   await Cvs.sync({ alter: true });
   await Messages.sync({ alter: true });
+  await Reports.sync({ alter: true });
   process.exit(0);
 }
 
