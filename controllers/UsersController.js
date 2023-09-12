@@ -4,7 +4,7 @@ import HttpError from 'http-errors';
 import _ from 'lodash';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidV4 } from 'uuid';
-import Users from '../models/Users';
+import { Users, Cvs } from '../models/index';
 import Mail from '../services/Mail';
 
 const { JWT_SECRET } = process.env;
@@ -255,8 +255,20 @@ class UsersController {
   static profile = async (req, res, next) => {
     try {
       const { userId } = req;
-
-      const user = await Users.findByPk(userId);
+      console.log(userId, 'aaaaaaaaa');
+      const user = await Users.findOne({
+        where: {
+          id: userId,
+        },
+        include: [
+          {
+            model: Cvs,
+            as: 'createdCvs',
+            required: false,
+          },
+        ],
+        raw: true,
+      });
 
       res.json({
         status: 'ok',
