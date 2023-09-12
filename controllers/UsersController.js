@@ -290,6 +290,23 @@ class UsersController {
       next(e);
     }
   };
+
+  static singleUserFromAdmin = async (req, res, next) => {
+    try {
+      const { id } = req.query;
+      console.log(id);
+      const singleFromAdmin = await Users.findByPk(id);
+      if (!singleFromAdmin) {
+        throw HttpError(404);
+      }
+      res.json({
+        status: 'ok',
+        singleFromAdmin,
+      });
+    } catch (e) {
+      next(e);
+    }
+  };
 }
 
 export default UsersController;
