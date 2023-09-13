@@ -5,9 +5,113 @@ import HttpError from 'http-errors';
 import { Users, Jobs } from '../models/index';
 
 class JobsController {
+  static jobsListFromUsersBox = async (req, res, next) => {
+    try {
+      const {
+        page = 1, limit = 5, city = '', order,
+      } = req.query;
+      const offset = (page - 1) * limit;
+      const { userId } = req;
+      const {
+        title, experience_level: experienceLevel = {}, job_type: jobType, date, tags,
+      } = req.body;
+      const where = {
+        status: 'active',
+        alreadyDone: false,
+        // userId: !userId,
+      };
+      if (title) {
+        where.title = { $like: `%${title}%` };
+      }
+      // experienceLevel
+      const experienceLevelArray = Object.values(experienceLevel).filter((value) => value !== '' && value !== null && value !== undefined);
+      if (experienceLevelArray.length > 0) {
+        where.experience = { $in: experienceLevelArray };
+      }
+
+      // price method && price
+      const priceMethod = [jobType.hourly, jobType.fixed].filter((value) => value !== '');
+      if (priceMethod.length > 0) {
+        where.priceMethod = { $in: priceMethod };
+      }
+      const minPriceFixed = +jobType.salary_min;
+      const maxPriceFixed = +jobType.salary_max;
+      const maxPriceHourly = +jobType.hour_max;
+      const minPriceHourly = +jobType.hour_min;
+      // eslint-disable-next-line max-len
+      if (maxPriceFixed && minPriceFixed && !Number.isNaN(maxPriceFixed) && !Number.isNaN(minPriceFixed) && priceMethod.includes('Project Budget')) {
+        where.priceFixed = {
+          $between: [minPriceFixed, maxPriceFixed],
+        };
+      } else if (minPriceFixed && !Number.isNaN(minPriceFixed) && priceMethod.includes('Project Budget')) {
+        where.priceFixed = {
+          $gte: minPriceFixed,
+        };
+      } else if (maxPriceFixed && !Number.isNaN(maxPriceFixed) && priceMethod.includes('Project Budget')) {
+        where.priceFixed = {
+          $lte: maxPriceFixed,
+        };
+      }
+
+      if (minPriceHourly && !Number.isNaN(minPriceHourly) && priceMethod.includes('Hourly Rate')) {
+        where.priceMinHourly = {
+          $gte: minPriceHourly,
+        };
+      }
+      if (maxPriceHourly && !Number.isNaN(maxPriceHourly) && priceMethod.includes('Hourly Rate')) {
+        where.priceMaxHourly = {
+          $lte: maxPriceHourly,
+        };
+      }
+      // location 'city'
+      if (city) {
+        where.city = city;
+      }
+      // date
+      if (date.from && date.to) {
+        where.createdAt = {
+          $between: [date.from, date.to],
+        };
+      }
+      // order
+      let orderBy;
+      if (order === 'Newest') {
+        orderBy = [['createdAt', 'DESC']];
+      } else if (order === 'Latest') {
+        orderBy = [['createdAt', 'ASC']];
+      } else {
+        orderBy = [['createdAt', 'DESC']];
+      }
+
+      const { count, rows: jobs } = await Jobs.findAndCountAll({
+        where,
+        offset,
+        limit: +limit,
+        order: orderBy,
+        include: [
+          {
+            model: Users,
+            as: 'creator',
+            attributes: ['firstName', 'lastName', 'avatar'],
+            required: true,
+          },
+        ],
+        raw: true,
+      });
+      const totalPages = Math.ceil(count / limit);
+      res.json({
+        jobs,
+        currentPage: +page,
+        totalPages,
+      });
+    } catch (e) {
+      next(e);
+    }
+  };
+
   static createJob = async (req, res, next) => {
     try {
-      const { file } = req;
+      const { file, userId } = req;
       const body = JSON.parse(req.body.data);
       const {
         dataFromChild1: title,
@@ -35,12 +139,16 @@ class JobsController {
         jobPhoto = path.join('/images/jobs/default-job-image.jpg');
       }
       const { city, country, fullAddress } = address;
+      console.log(price, 'price');
       const job = await Jobs.create({
-        userId: 1,
+        userId,
         title,
         skills,
         experience,
-        price,
+        priceMethod: price.method,
+        priceFixed: price.maxPrice,
+        priceMinHourly: price.priceFrom,
+        priceMaxHourly: price.priceTo,
         description,
         geometry: location,
         phoneNumber,
@@ -55,6 +163,75 @@ class JobsController {
         status: 'ok',
       });
     } catch (e) {
+      next(e);
+    }
+  };
+
+  static editJob = async (req, res, next) => {
+    try {
+      const { jobId } = req.params;
+      const { file } = req;
+      const body = JSON.parse(req.body.data);
+      const {
+        dataFromChild1: title,
+        dataFromChild2: skills,
+        dataFromChild3: experience,
+        dataFromChild4: price,
+        dataFromChild5: description,
+        dataFromChild6,
+      } = body;
+      const { address, phoneNumber } = dataFromChild6;
+      let location = null;
+
+      if (address && address.longitude && address.latitude) {
+        location = {
+          type: 'Point',
+          coordinates: [address.longitude, address.latitude],
+        };
+      }
+
+      let jobPhoto;
+      if (file) {
+        jobPhoto = path.join(`/images/jobs/${uuidV4()}_${file.originalname}`);
+        const filePath = path.resolve(path.join('public', jobPhoto));
+        fs.writeFileSync(filePath, file.buffer);
+      }
+
+      const { city, country, fullAddress } = address;
+
+      const updatedJob = {
+        title,
+        skills,
+        experience,
+        priceMethod: price.method,
+        priceFixed: price.maxPrice,
+        priceMinHourly: price.priceFrom,
+        priceMaxHourly: price.priceTo,
+        description,
+        geometry: location,
+        phoneNumber,
+        city,
+        country,
+        fullAddress,
+        jobPhoto,
+        status: 'pending',
+      };
+
+      const [rowsAffected, [updatedJobData]] = await Jobs.update(updatedJob, {
+        where: { id: jobId },
+        returning: true,
+      });
+
+      if (rowsAffected === 0) {
+        throw HttpError(404, 'job not found');
+      }
+
+      res.json({
+        job: updatedJobData,
+        status: 'ok',
+      });
+    } catch (e) {
+      console.error(e);
       next(e);
     }
   };
@@ -129,20 +306,17 @@ class JobsController {
     }
   };
 
-  static jobsListFromUsers = async (req, res, next) => {
+  static jobsListFromUsersMap = async (req, res, next) => {
     try {
-      const { page = 1, limit = 20 } = req.query;
-      const offset = (page - 1) * limit;
+      const { city } = req.query;
       const whereCondition = {
         alreadyDone: false,
         status: 'active',
+        city,
       };
-
-      const { count, rows: jobs } = await Jobs.findAndCountAll(
+      const { rows: jobs } = await Jobs.findAndCountAll(
         {
           where: whereCondition,
-          offset,
-          limit: +limit,
           include: [
             {
               model: Users,
@@ -154,13 +328,8 @@ class JobsController {
           raw: true,
         },
       );
-
-      const totalPages = Math.ceil(count / limit);
-
       res.json({
         jobs,
-        currentPage: +page,
-        totalPages,
       });
     } catch (e) {
       next(e);
@@ -180,71 +349,6 @@ class JobsController {
       job.alreadyDone = true;
       await job.save();
     } catch (e) {
-      next(e);
-    }
-  };
-
-  static editJob = async (req, res, next) => {
-    try {
-      const { jobId } = req.params;
-      const { file } = req;
-      const body = JSON.parse(req.body.data);
-      const {
-        dataFromChild1: title,
-        dataFromChild2: skills,
-        dataFromChild3: experience,
-        dataFromChild4: price,
-        dataFromChild5: description,
-        dataFromChild6,
-      } = body;
-      const { address, phoneNumber } = dataFromChild6;
-      let location = null;
-
-      if (address && address.longitude && address.latitude) {
-        location = {
-          type: 'Point',
-          coordinates: [address.longitude, address.latitude],
-        };
-      }
-
-      let jobPhoto;
-      if (file) {
-        jobPhoto = path.join(`/images/jobs/${uuidV4()}_${file.originalname}`);
-        const filePath = path.resolve(path.join('public', jobPhoto));
-        fs.writeFileSync(filePath, file.buffer);
-      }
-
-      const { city, country, fullAddress } = address;
-
-      const updatedJob = {
-        title,
-        skills,
-        experience,
-        price,
-        description,
-        geometry: location,
-        phoneNumber,
-        city,
-        country,
-        fullAddress,
-        jobPhoto: jobPhoto || undefined,
-      };
-
-      const [rowsAffected, [updatedJobData]] = await Jobs.update(updatedJob, {
-        where: { id: jobId },
-        returning: true,
-      });
-
-      if (rowsAffected === 0) {
-        throw HttpError(404, 'job not found');
-      }
-
-      res.json({
-        job: updatedJobData,
-        status: 'ok',
-      });
-    } catch (e) {
-      console.error(e);
       next(e);
     }
   };

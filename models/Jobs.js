@@ -27,10 +27,22 @@ Jobs.init({
     allowNull: true,
     default: '',
   },
-  price: {
-    type: DataTypes.JSON,
+  priceMinHourly: {
+    type: DataTypes.INTEGER,
     allowNull: true,
-    default: {},
+  },
+  priceMaxHourly: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
+  priceFixed: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
+  priceMethod: {
+    type: DataTypes.ENUM('Project Budget', 'Hourly Rate'),
+    allowNull: true,
+    default: '',
   },
   description: {
     type: DataTypes.STRING,
