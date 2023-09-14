@@ -247,6 +247,34 @@ class UsersController {
       next(e);
     }
   };
+
+  static changeRole = async (req, res, next) => {
+    console.log(5555999);
+    try {
+      const { userId } = req;
+      console.log(userId);
+      const user = await Users.findOne({
+        where: {
+          id: userId,
+        },
+      });
+      if (!user) {
+        throw HttpError(404, 'User not found');
+      }
+      if (user.role === 'employer') {
+        user.role = 'employee';
+      } else {
+        user.role = 'employer';
+      }
+      await user.save();
+      res.json({
+        status: 'ok',
+        userRole: user.role,
+      });
+    } catch (e) {
+      next(e);
+    }
+  };
 }
 
 export default UsersController;

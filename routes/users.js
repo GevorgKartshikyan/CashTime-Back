@@ -25,5 +25,6 @@ router.post('/activate', UsersController.activate);
 router.get('/list', UsersController.list);
 router.get('/single/:userId', UsersController.singleUser);
 router.get('/profile', UsersController.profile);
+router.get('/change-role', UsersController.changeRole);
 
 export default router;
