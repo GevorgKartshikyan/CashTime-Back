@@ -8,12 +8,21 @@ import { Users, Cvs } from '../models/index';
 import Mail from '../services/Mail';
 
 const { JWT_SECRET } = process.env;
+
 class UsersController {
   static register = async (req, res, next) => {
     try {
       const { file } = req;
       const {
-        email, password, firstName, lastName, phone, role = 'employer', address, confirmPassword, type,
+        email,
+        password,
+        firstName,
+        lastName,
+        phone,
+        role = 'employer',
+        address,
+        confirmPassword,
+        type,
       } = req.body;
       console.log(req.body, 'body');
       let location = null;
@@ -115,7 +124,9 @@ class UsersController {
   static login = async (req, res, next) => {
     try {
       const {
-        email, password, type,
+        email,
+        password,
+        type,
       } = req.body;
 
       let user;
@@ -153,7 +164,10 @@ class UsersController {
 
   static activate = async (req, res, next) => {
     try {
-      const { validationCode, email } = req.body;
+      const {
+        validationCode,
+        email,
+      } = req.body;
       const user = await Users.findOne({
         where: {
           email,
@@ -182,7 +196,11 @@ class UsersController {
   static list = async (req, res, next) => {
     try {
       const {
-        page = 1, limit = 5, role, search, id = undefined,
+        page = 1,
+        limit = 5,
+        role,
+        search,
+        id = undefined,
       } = req.query;
       if (Number.isNaN(+page) || Number.isNaN(+limit)) {
         throw HttpError(400, 'Page or limit is not a number');
