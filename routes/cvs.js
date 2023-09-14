@@ -19,4 +19,5 @@ const upload = multer({
   },
 });
 router.post('/create-cv', upload.single('avatar'), CvsController.createCv);
+router.get('/singleCv/:id', CvsController.singleCv);
 export default router;

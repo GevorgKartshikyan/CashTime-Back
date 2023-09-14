@@ -89,6 +89,16 @@ Users.init({
       return `https://www.gravatar.com/avatar/${md5(email)}?d=wavatar`;
     },
   },
+  totalJobs: {
+    type: DataTypes.BIGINT.UNSIGNED,
+    allowNull: true,
+    default: 0,
+  },
+  jobsInProgress: {
+    type: DataTypes.BIGINT.UNSIGNED,
+    allowNull: true,
+    default: 0,
+  },
 }, {
   sequelize,
   modelName: 'users',
