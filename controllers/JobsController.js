@@ -139,7 +139,7 @@ class JobsController {
         jobPhoto = path.join('/images/jobs/default-job-image.jpg');
       }
       const { city, country, fullAddress } = address;
-      console.log(price, 'price');
+      console.log(userId);
       const job = await Jobs.create({
         userId,
         title,
@@ -348,6 +348,28 @@ class JobsController {
       });
       job.alreadyDone = true;
       await job.save();
+    } catch (e) {
+      next(e);
+    }
+  };
+
+  static singleJobInfo = async (req, res, next) => {
+    try {
+      const { id } = req.query;
+      const singleJob = await Jobs.findOne({
+        where: {
+          id,
+          status: 'active',
+          alreadyDone: false,
+        },
+      });
+      if (!singleJob) {
+        throw HttpError(404, 'JOB NOT FOUND');
+      }
+      res.json({
+        singleJob,
+        status: 'ok',
+      });
     } catch (e) {
       next(e);
     }
