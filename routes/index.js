@@ -5,6 +5,7 @@ import messages from './messages';
 import cvs from './cvs';
 import reports from './reports';
 import utils from './utils';
+import application from './application';
 
 const router = express.Router();
 
@@ -20,4 +21,5 @@ router.use('/messages', messages);
 router.use('/cvs', cvs);
 router.use('/reports', reports);
 router.use('/utils', utils);
+router.use('/app', application);
 export default router;

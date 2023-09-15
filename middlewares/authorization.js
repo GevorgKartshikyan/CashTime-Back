@@ -8,7 +8,8 @@ const EXCLUDE = [
   'POST:/users/activate',
   'POST:/utils/create-countries',
   'POST:/utils/create-base-skills',
-  'GET:/utils/get-countries',
+  'GET:/app/get-countries',
+  'GET:/app/get-skills',
 ];
 export default function userAuthorization(req, res, next) {
   try {
