@@ -7,6 +7,7 @@ const EXCLUDE = [
   'POST:/users/register',
   'POST:/users/activate',
   'POST:/utils/create-countries',
+  'POST:/utils/create-base-skills',
   'GET:/utils/get-countries',
 ];
 export default function userAuthorization(req, res, next) {

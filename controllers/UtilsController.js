@@ -1,5 +1,6 @@
 import axios from 'axios';
-import { Countries } from '../models/index';
+import { Countries, SkillsBase } from '../models/index';
+import { dataSkills } from '../dataRemove/dataSkills';
 
 class UtilsController {
   static createCountriesInDataBase = async (req, res, next) => {
@@ -28,6 +29,25 @@ class UtilsController {
     try {
       const countries = await Countries.findAll();
       res.json(countries);
+    } catch (e) {
+      next(e);
+    }
+  };
+
+  static createBaseSkills = async (req, res, next) => {
+    try {
+      const baseSkills = [];
+      const createdPromise = dataSkills.map(async (skill) => {
+        const skills = await SkillsBase.create({
+          skill,
+        });
+        baseSkills.push(skills);
+      });
+      await Promise.all(createdPromise);
+      res.json({
+        status: 'ok',
+        skills: baseSkills,
+      });
     } catch (e) {
       next(e);
     }
