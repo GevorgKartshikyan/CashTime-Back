@@ -5,7 +5,7 @@ import messages from './messages';
 import cvs from './cvs';
 import reports from './reports';
 import utils from './utils';
-import application from './application';
+import application from './app';
 
 const router = express.Router();
 

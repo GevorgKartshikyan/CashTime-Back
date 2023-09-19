@@ -13,6 +13,7 @@ const EXCLUDE = [
   'POST:/app/add-skill',
   'POST:/app/delete-skill',
   'PUT:/app/get-skills-admin',
+  'GET:/app/all-counts',
 ];
 export default function userAuthorization(req, res, next) {
   try {

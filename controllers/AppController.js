@@ -1,5 +1,7 @@
 import HttpError from 'http-errors';
-import { Countries, SkillsBase } from '../models/index';
+import {
+  Countries, Jobs, SkillsBase, Users,
+} from '../models/index';
 
 class AppController {
   static getCountries = async (req, res, next) => {
@@ -97,6 +99,31 @@ class AppController {
       res.json({
         status: 'ok',
         deletedSkill,
+      });
+    } catch (e) {
+      next(e);
+    }
+  };
+
+  static getAllCountsForAdmin = async (req, res, next) => {
+    try {
+      const allEmployers = await Users.count({
+        where: {
+          role: 'employer',
+        },
+      });
+      const allEmployees = await Users.count({
+        where: {
+          role: 'employee',
+        },
+      });
+
+      const allJobs = await Jobs.count();
+
+      res.json({
+        allEmployers,
+        allEmployees,
+        allJobs,
       });
     } catch (e) {
       next(e);
