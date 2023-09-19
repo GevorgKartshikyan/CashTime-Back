@@ -4,7 +4,7 @@ import HttpError from 'http-errors';
 import _ from 'lodash';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidV4 } from 'uuid';
-import { Users, Cvs } from '../models/index';
+import { Users, Cvs, Reports } from '../models/index';
 import Mail from '../services/Mail';
 
 const { JWT_SECRET } = process.env;
@@ -359,6 +359,30 @@ class UsersController {
         status: 'ok',
         userRole: user.role,
       });
+    } catch (e) {
+      next(e);
+    }
+  };
+
+  static blockedUsers = async (req, res, next) => {
+    try {
+      const blocked = await Users.findAll({
+        where: {
+          status: 'block',
+        },
+        include: [
+          {
+            as: 'report',
+            model: Reports,
+            required: true,
+          },
+        ],
+        raw: true,
+      });
+      res.json({
+        blocked,
+      });
+      console.log(blocked);
     } catch (e) {
       next(e);
     }
