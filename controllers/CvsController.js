@@ -32,25 +32,6 @@ class CvsController {
         const filePath = path.resolve(path.join('public', cvPhoto));
         fs.writeFileSync(filePath, file.buffer);
       }
-      // console.log(
-      //   experience,
-      //   goal,
-      //   profRole,
-      //   language,
-      //   school,
-      //   degree,
-      //   datesAttended,
-      //   services,
-      //   hourlyRate,
-      //   skills,
-      //   bio,
-      //   country,
-      //   fullAddress,
-      //   city,
-      //   geometry,
-      //   phoneNumber,
-      //   cvPhoto,
-      // );
       let location = null;
       if (geometry && geometry.longitude && geometry.latitude) {
         location = {
@@ -59,6 +40,7 @@ class CvsController {
         };
       }
       const cv = await Cvs.create({
+        userId: req.userId,
         experience,
         goal,
         profRole,
@@ -77,39 +59,6 @@ class CvsController {
         cvPhoto,
         geometry: location,
       });
-      // const { address, phoneNumber } = dataFromChild6;
-      // let location = null;
-
-      // if (address && address.longitude && address.latitude) {
-      //   location = {
-      //     type: 'Point',
-      //     coordinates: [address.longitude, address.latitude],
-      //   };
-      // }
-      // let jobPhoto;
-      // if (file) {
-      //   jobPhoto = path.join(`/images/jobs/${uuidV4()}_${file.originalname}`);
-      //   const filePath = path.resolve(path.join('public', jobPhoto));
-      //   fs.writeFileSync(filePath, file.buffer);
-      // } else {
-      //   jobPhoto = path.join('/images/jobs/default-job-image.jpg');
-      // }
-      // const { city, country, fullAddress } = address;
-      // const job = await Jobs.create({
-      //   userId: 1,
-      //   title,
-      //   skills,
-      //   experience,
-      //   price,
-      //   description,
-      //   geometry: location,
-      //   phoneNumber,
-      //   city,
-      //   country,
-      //   fullAddress,
-      //   jobPhoto,
-      //   status: 'pending',
-      // });
       res.json({
         cv,
         status: 'ok',
@@ -120,6 +69,23 @@ class CvsController {
     }
   };
 
+  static singleCv = async (req, res, next) => {
+    try {
+      const cvId = req.params.id;
+      const cv = await Cvs.findOne({
+        where: {
+          id: cvId,
+        },
+      });
+      res.json({
+        cv,
+        status: 'ok',
+      });
+    } catch (e) {
+      console.error(e);
+      next(e);
+    }
+  };
   // static activateJob = async (req, res, next) => {
   //   try {
   //     const jobId = 1;

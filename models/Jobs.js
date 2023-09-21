@@ -49,11 +49,6 @@ Jobs.init({
     allowNull: true,
     default: '',
   },
-  address: {
-    type: DataTypes.JSON,
-    allowNull: true,
-    default: {},
-  },
   phoneNumber: {
     type: DataTypes.STRING,
     allowNull: true,

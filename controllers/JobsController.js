@@ -18,7 +18,7 @@ class JobsController {
       const where = {
         status: 'active',
         alreadyDone: false,
-        // userId: !userId,
+        userId: !userId,
       };
       if (title) {
         where.title = { $like: `%${title}%` };
@@ -139,7 +139,6 @@ class JobsController {
         jobPhoto = path.join('/images/jobs/default-job-image.jpg');
       }
       const { city, country, fullAddress } = address;
-      console.log(price, 'price');
       const job = await Jobs.create({
         userId,
         title,
@@ -169,7 +168,7 @@ class JobsController {
 
   static editJob = async (req, res, next) => {
     try {
-      const { jobId } = req.params;
+      const { jobId } = req.params; // change
       const { file } = req;
       const body = JSON.parse(req.body.data);
       const {
@@ -218,7 +217,7 @@ class JobsController {
       };
 
       const [rowsAffected, [updatedJobData]] = await Jobs.update(updatedJob, {
-        where: { id: jobId },
+        where: { id: jobId }, // change
         returning: true,
       });
 
@@ -348,6 +347,28 @@ class JobsController {
       });
       job.alreadyDone = true;
       await job.save();
+    } catch (e) {
+      next(e);
+    }
+  };
+
+  static singleJobInfo = async (req, res, next) => {
+    try {
+      const { id } = req.query;
+      const singleJob = await Jobs.findOne({
+        where: {
+          id,
+          status: 'active',
+          alreadyDone: false,
+        },
+      });
+      if (!singleJob) {
+        throw HttpError(404, 'JOB NOT FOUND');
+      }
+      res.json({
+        singleJob,
+        status: 'ok',
+      });
     } catch (e) {
       next(e);
     }
