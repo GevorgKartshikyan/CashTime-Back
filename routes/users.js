@@ -27,9 +27,5 @@ router.get('/list', UsersController.list);
 router.get('/single/:userId', UsersController.singleUser);
 router.get('/singleUserFromAdmin', UsersController.singleUserFromAdmin);
 router.get('/profile', UsersController.profile);
-<<<<<<< HEAD
-=======
 router.put('/status', UsersController.status);
-
->>>>>>> b58939c2bf127d1f60abe24be6a6de7fd1750d03
 export default router;
