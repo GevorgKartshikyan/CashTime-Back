@@ -7,6 +7,7 @@ const EXCLUDE = [
   'POST:/users/register',
   'POST:/users/activate',
   'POST:/utils/create-countries',
+  'POST:/utils/notice-test',
   'POST:/utils/create-base-skills',
   'GET:/app/get-countries',
   'GET:/app/get-skills',
