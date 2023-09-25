@@ -267,7 +267,7 @@ class UsersController {
             required: false,
           },
         ],
-        raw: true,
+        raw: false,
       });
 
       res.json({
@@ -297,6 +297,96 @@ class UsersController {
       res.json({
         status: 'ok',
         user,
+      });
+    } catch (e) {
+      next(e);
+    }
+  };
+
+  static editProfile = async (req, res, next) => {
+    try {
+      const { userId } = req;
+      const { file } = req;
+      const data = req.body;
+      const user = await Users.findByPk(userId);
+      const cv = await Cvs.findOne({
+        where: {
+          userId,
+        },
+      });
+      if (data.userName) {
+        user.firstName = data.userName;
+      }
+      if (data.surname) {
+        user.lastName = data.surname;
+      }
+      let location = null;
+      if (data.address && data.address.longitude && data.address.latitude) {
+        location = {
+          type: 'Point',
+          coordinates: [data.address.longitude, data.address.latitude],
+        };
+      }
+      let avatar;
+      if (file) {
+        avatar = path.join(`/images/users/${uuidV4()}_${file.originalname}`);
+        const filePath = path.resolve(path.join('public', avatar));
+        fs.writeFileSync(filePath, file.buffer);
+      }
+      user.phone = data.phoneNumber;
+      user.location = location;
+      user.country = data.address.country;
+      user.city = data.address.city;
+      user.avatar = avatar;
+      await user.save();
+      if (cv) {
+        cv.skills = data.addSkill;
+        cv.phoneNumber = data.phoneNumber;
+        cv.language = data.addLanguages;
+        cv.location = location;
+        cv.country = data.address.country;
+        cv.city = data.address.city;
+        cv.school = data.education;
+        cv.degree = data.subject;
+        cv.experience = data.profession.label || '';
+        await cv.save();
+      } else if (!cv) {
+        await Cvs.create({
+          userId,
+          skills: data.addSkill,
+          phoneNumber: data.phoneNumber,
+          language: data.addLanguages,
+          location,
+          country: data.address.country,
+          city: data.address.city,
+          school: data.education,
+          degree: data.subject,
+          experience: data.profession.label || '',
+        });
+      }
+
+      res.json({
+        user,
+        cv,
+      });
+    } catch (e) {
+      next(e);
+    }
+  };
+
+  static editUserAbout = async (req, res, next) => {
+    try {
+      const { userId } = req;
+      const { data } = req.body;
+      const cv = await Cvs.findOne({
+        where: {
+          userId,
+        },
+      });
+      cv.bio = data.bio;
+      await cv.save();
+      res.json({
+        cv,
       });
     } catch (e) {
       next(e);

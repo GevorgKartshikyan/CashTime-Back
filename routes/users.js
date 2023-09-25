@@ -26,5 +26,7 @@ router.get('/list', UsersController.list);
 router.get('/single/:userId', UsersController.singleUser);
 router.get('/profile', UsersController.profile);
 router.put('/status', UsersController.status);
+router.put('/edit-employee', upload.single('avatar'), UsersController.editProfile);
+router.put('/edit-employee-about', UsersController.editUserAbout);
 
 export default router;
