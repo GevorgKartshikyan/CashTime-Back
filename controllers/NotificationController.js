@@ -99,7 +99,7 @@ class NotificationController {
           },
           {
             model: Jobs,
-            as: 'userJobTo',
+            as: 'fromJob',
             attributes: ['id'],
             required: false,
           },
