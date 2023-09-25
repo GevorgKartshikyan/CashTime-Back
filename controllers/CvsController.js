@@ -1,12 +1,21 @@
 import path from 'path';
 import fs from 'fs';
 import { v4 as uuidV4 } from 'uuid';
+import HttpError from 'http-errors';
 import Cvs from '../models/Cvs';
 
 class CvsController {
   static createCv = async (req, res, next) => {
     try {
-      const { file } = req;
+      const { file, userId } = req;
+      const existCv = await Cvs.findOne({
+        where: {
+          userId,
+        },
+      });
+      if (existCv) {
+        throw HttpError(403, 'user already cv');
+      }
       const data = req.body;
       const {
         experience,
@@ -40,7 +49,7 @@ class CvsController {
         };
       }
       const cv = await Cvs.create({
-        userId: req.userId,
+        userId,
         experience,
         goal,
         profRole,
@@ -50,7 +59,7 @@ class CvsController {
         datesAttended,
         category: services,
         hourlyRate,
-        skills,
+        skills: skills || [],
         bio,
         country,
         fullAddress,
