@@ -6,6 +6,7 @@
 import http from 'http';
 import Debug from 'debug';
 import app from '../app';
+import Socket from '../services/Socket';
 
 process.env.TZ = 'UTC';
 
@@ -22,6 +23,7 @@ app.set('port', port);
  */
 
 const server = http.createServer(app);
+Socket.init(server);
 
 /**
  * Listen on provided port, on all network interfaces.

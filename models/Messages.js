@@ -19,6 +19,9 @@ Messages.init({
   seen: {
     type: DataTypes.DATE,
   },
+  change: {
+    type: DataTypes.BOOLEAN,
+  },
 }, {
   sequelize,
   modelName: 'messages',

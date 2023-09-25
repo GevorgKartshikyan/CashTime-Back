@@ -4,16 +4,28 @@ import HttpError from 'http-errors';
 import _ from 'lodash';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidV4 } from 'uuid';
+import { Sequelize } from 'sequelize';
 import Users from '../models/Users';
 import Mail from '../services/Mail';
+// import sequelize from '../services/sequelize';
+import { Messages } from '../models/index';
 
 const { JWT_SECRET } = process.env;
+
 class UsersController {
   static register = async (req, res, next) => {
     try {
       const { file } = req;
       const {
-        email, password, firstName, lastName, phone, role = 'employer', address, confirmPassword, type,
+        email,
+        password,
+        firstName,
+        lastName,
+        phone,
+        role = 'employer',
+        address,
+        confirmPassword,
+        type,
       } = req.body;
       let location = null;
       let city = null;
@@ -114,7 +126,9 @@ class UsersController {
   static login = async (req, res, next) => {
     try {
       const {
-        email, password, type,
+        email,
+        password,
+        type,
       } = req.body;
 
       let user;
@@ -152,7 +166,10 @@ class UsersController {
 
   static activate = async (req, res, next) => {
     try {
-      const { validationCode, email } = req.body;
+      const {
+        validationCode,
+        email,
+      } = req.body;
       const user = await Users.findOne({
         where: {
           email,
@@ -179,9 +196,13 @@ class UsersController {
   };
 
   static list = async (req, res, next) => {
+    const { userId } = req;
     try {
       const {
-        page = 1, limit = 5, role, search,
+        page = 1,
+        limit = 5,
+        role,
+        search,
       } = req.query;
       if (Number.isNaN(+page) || Number.isNaN(+limit)) {
         throw HttpError(400, 'Page or limit is not a number');
@@ -206,12 +227,122 @@ class UsersController {
         offset,
         where,
       });
+
+      const usersForMessages = await Users.findAll({
+        where,
+        include: [
+          {
+            model: Messages,
+            as: 'messagesTo',
+            attributes: [],
+            required: false,
+            where: {
+              $or: [
+                { to: userId },
+                { from: userId },
+              ],
+            },
+          },
+          {
+            model: Messages,
+            as: 'messagesFrom',
+            attributes: [],
+            required: false,
+            where: {
+              $or: [
+                { to: userId },
+                { from: userId },
+              ],
+            },
+          },
+        ],
+        group: ['id'],
+        logging: true,
+        having: Sequelize.literal('COUNT(`messagesTo`.`id`) > 0 OR COUNT(`messagesFrom`.`id`) > 0'),
+        order: [
+          [
+            Sequelize.literal('GREATEST(COALESCE(max(`messagesTo`.`createdAt`), 0), COALESCE(max(`messagesFrom`.`createdAt`), 0))'),
+            'DESC',
+          ],
+        ],
+      });
+
+      // const data = await Messages.findAll({
+      //   attributes: [
+      //     [Sequelize.literal('ANY_VALUE(text)'), 'text'],
+      //     [Sequelize.literal(`ANY_VALUE(IF(\`from\` = ${userId}, \`to\`, \`from\`))`),
+      //     'friendId'],
+      //   ],
+      //   where: {
+      //     $or: [
+      //       {
+      //         to: usersForMessages.map((d) => d.id),
+      //         from: userId,
+      //       },
+      //       {
+      //         from: usersForMessages.map((d) => d.id),
+      //         to: userId,
+      //       },
+      //     ],
+      //   },
+      //   group: [Sequelize.literal(`IF(\`from\` = ${userId} ,
+      //   \`from\`, \`to\`), IF(\`from\` = ${userId} , \`to\`, \`from\`)`)],
+      //   order: [[Sequelize.literal('MAX(createdAt)'), 'ASC']],
+      //   logging: true,
+      //   raw: true,
+      // });
+
+      const latestMessages = await Messages.findAll({
+        attributes: [
+          [Sequelize.literal('MAX(createdAt)'), 'latestCreatedAt'],
+        ],
+        where: {
+          $or: [
+            {
+              to: usersForMessages.map((d) => d.id),
+              from: userId,
+            },
+            {
+              from: usersForMessages.map((d) => d.id),
+              to: userId,
+            },
+          ],
+        },
+        group: [Sequelize.literal(`IF(\`from\` = ${userId} , \`from\`, \`to\`), IF(\`from\` = ${userId} , \`to\`, \`from\`)`)],
+        raw: true,
+      });
+
+      const latestMessagesIds = await Messages.findAll({
+        attributes: ['id'],
+        where: {
+          createdAt: latestMessages.map((message) => message.latestCreatedAt),
+        },
+      });
+
+      const latestMessageIdsArray = latestMessagesIds.map((message) => message.id);
+
+      const latestMessagesData = await Messages.findAll({
+        where: {
+          id: latestMessageIdsArray,
+        },
+        raw: true,
+      });
+
+      usersForMessages.forEach((user) => {
+        user.lastMessage = latestMessagesData.find(
+          (d) => +d.to === +user.id || +d.from === +user.id,
+        );
+        user.setDataValue('lastMessage', user.lastMessage);
+      });
+
       res.json({
         status: 'ok',
         totalUsers: count,
+        // data,
         totalPages,
         currentPage: +page,
         users: usersList,
+        usersForMessages,
       });
     } catch (e) {
       next(e);
