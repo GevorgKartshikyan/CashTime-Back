@@ -2,11 +2,12 @@ import path from 'path';
 import fs from 'fs';
 import { v4 as uuidV4 } from 'uuid';
 import Cvs from '../models/Cvs';
+import Users from '../models/Users';
 
 class CvsController {
   static createCv = async (req, res, next) => {
     try {
-      const { file } = req;
+      const { file, userId } = req;
       const data = req.body;
       const {
         experience,
@@ -40,7 +41,7 @@ class CvsController {
         };
       }
       const cv = await Cvs.create({
-        userId: req.userId,
+        userId,
         experience,
         goal,
         profRole,
@@ -86,93 +87,30 @@ class CvsController {
       next(e);
     }
   };
-  // static activateJob = async (req, res, next) => {
-  //   try {
-  //     const jobId = 1;
-  //     const job = await Jobs.findOne({
-  //       where: {
-  //         id: jobId,
-  //         status: 'pending',
-  //       },
-  //     });
-  //     job.status = 'active';
-  //     await job.save();
-  //     res.send({
-  //       status: 'ok',
-  //       job,
-  //     });
-  //   } catch (e) {
-  //     next(e);
-  //   }
-  // };
-  //
-  // static deleteJob = async (req, res, next) => {
-  //   try {
-  //     const jobId = 1;
-  //     const job = await Jobs.findOne({
-  //       where: {
-  //         id: jobId,
-  //       },
-  //     });
-  //     await job.destroy();
-  //     res.send({
-  //       status: 'ok',
-  //       job,
-  //     });
-  //   } catch (e) {
-  //     next(e);
-  //   }
-  // };
-  //
-  // static allJobListFromAdmin = async (req, res, next) => {
-  //   try {
-  //     const { page = 1, limit = 20 } = req.query;
-  //     const offset = (page - 1) * limit;
-  //     const jobs = await Jobs.findAll({
-  //       offset,
-  //       limit: +limit,
-  //     });
-  //     const count = await Jobs.count();
-  //     const totalPages = Math.ceil(count / limit);
-  //     res.json({
-  //       jobs,
-  //       currentPage: +page,
-  //       totalPages,
-  //     });
-  //   } catch (e) {
-  //     next(e);
-  //   }
-  // };
-  //
-  // static jobsListFromUsers = async (req, res, next) => {
-  //   try {
-  //     const { page = 1, limit = 20 } = req.query;
-  //     const offset = (page - 1) * limit;
-  //     const whereCondition = {
-  //       alreadyDone: false,
-  //       status: 'active',
-  //     };
-  //
-  //     const jobs = await Jobs.findAll({
-  //       where: whereCondition,
-  //       offset,
-  //       limit: +limit,
-  //     });
-  //
-  //     const count = await Jobs.count({
-  //       where: whereCondition,
-  //     });
-  //
-  //     const totalPages = Math.ceil(count / limit);
-  //
-  //     res.json({
-  //       jobs,
-  //       currentPage: +page,
-  //       totalPages,
-  //     });
-  //   } catch (e) {
-  //     next(e);
-  //   }
-  // };
+
+  static usersData = async (req, res, next) => {
+    try {
+      const data = req.body;
+      console.log(data);
+      const users = await Users.findAll({
+        include: [
+          {
+            as: 'createdCvs',
+            model: Cvs,
+            required: true,
+          },
+        ],
+        raw: false,
+      });
+      // console.log(users, 77777);
+      res.json({
+        users,
+        status: 'ok',
+      });
+    } catch (e) {
+      console.error(e);
+      next(e);
+    }
+  };
 }
 export default CvsController;
