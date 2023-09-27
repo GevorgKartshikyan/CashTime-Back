@@ -385,5 +385,23 @@ class JobsController {
       next(e);
     }
   };
+
+  static jobsTitles = async (req, res, next) => {
+    try {
+      const { userId } = req;
+      const jobsTitles = await Jobs.findAll({
+        where: {
+          userId,
+        },
+        attributes: ['id', 'title'],
+      });
+      res.json({
+        status: 'ok',
+        jobsTitlesArray: jobsTitles,
+      });
+    } catch (e) {
+      next(e);
+    }
+  };
 }
 export default JobsController;
