@@ -17,7 +17,7 @@ class UtilsController {
           },
         });
         if (existCountry) {
-          throw HttpError(400, 'country alredy declared');
+          throw HttpError(400, 'country already declared');
         }
         const country = await Countries.create({
           value: countryData.cca2.toLowerCase(),

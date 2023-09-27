@@ -366,7 +366,13 @@ class UsersController {
 
   static blockedUsers = async (req, res, next) => {
     try {
-      const blocked = await Users.findAll({
+      const {
+        page = 1,
+        limit = 6  ,
+      } = req.query;
+      const offset = (+page - 1) * +limit;
+      console.log(111111111);
+      const { count, rows: blocked } = await Users.findAndCountAll({
         where: {
           status: 'block',
         },
@@ -378,9 +384,14 @@ class UsersController {
           },
         ],
         raw: true,
+        limit: +limit,
+        offset,
       });
+      const totalBlockedPages = Math.ceil(count / limit);
       res.json({
         blocked,
+        totalBlockedPages,
+        currentPage: +page,
       });
       console.log(blocked);
     } catch (e) {

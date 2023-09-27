@@ -28,6 +28,6 @@ router.get('/singleUserFromAdmin', UsersController.singleUserFromAdmin);
 router.get('/profile', UsersController.profile);
 router.put('/status', UsersController.status);
 router.get('/change-role', UsersController.changeRole);
-router.get('/blockedUsers', UsersController.blockedUsers);
+router.get('/blocked-users', UsersController.blockedUsers);
 
 export default router;

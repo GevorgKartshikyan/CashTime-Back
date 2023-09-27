@@ -45,7 +45,7 @@ Jobs.init({
     default: '',
   },
   description: {
-    type: DataTypes.STRING,
+    type: DataTypes.TEXT,
     allowNull: true,
     default: '',
   },
