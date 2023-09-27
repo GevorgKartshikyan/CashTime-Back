@@ -31,4 +31,6 @@ router.get('/change-role', UsersController.changeRole);
 router.get('/blockedUsers', UsersController.blockedUsers);
 router.put('/edit-employee', upload.single('avatar'), UsersController.editProfile);
 router.put('/edit-employee-about', UsersController.editUserAbout);
+router.get('/blocked-users', UsersController.blockedUsers);
+
 export default router;
