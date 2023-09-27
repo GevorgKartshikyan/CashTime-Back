@@ -202,7 +202,7 @@ class UsersController {
       const {
         page = 1,
         limit = 5,
-        role,
+        role = '',
         search,
         id = undefined,
       } = req.query;
@@ -221,8 +221,9 @@ class UsersController {
           { email: { $like: `%${search}%` } },
         ];
       }
-
-      where.role = role;
+      if (role) {
+        where.role = role;
+      }
       const count = await Users.count({
         where,
       });

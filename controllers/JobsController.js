@@ -2,7 +2,7 @@ import path from 'path';
 import fs from 'fs';
 import { v4 as uuidV4 } from 'uuid';
 import HttpError from 'http-errors';
-import { Users, Jobs } from '../models/index';
+import { Users, Jobs, Notification } from '../models/index';
 
 class JobsController {
   static jobsListFromUsersBox = async (req, res, next) => {
@@ -13,12 +13,25 @@ class JobsController {
       const offset = (page - 1) * limit;
       const { userId } = req;
       const {
-        title, experience_level: experienceLevel = {}, job_type: jobType, date, tags,
+        title, experience_level: experienceLevel = {}, job_type: jobType, date,
       } = req.body;
+      const jobNotices = await Notification.findAll({
+        where: {
+          noticeFrom: userId,
+        },
+      });
       const where = {
         status: 'active',
         alreadyDone: false,
+        userId: {
+          $ne: userId,
+        },
       };
+      if (jobNotices) {
+        const noShowWorks = jobNotices.map((e) => e.noticeJobTo);
+        const uniqId = [...new Set(noShowWorks)];
+        where.id = { $notIn: uniqId };
+      }
       if (title) {
         where.title = { $like: `%${title}%` };
       }
@@ -112,7 +125,6 @@ class JobsController {
     try {
       const { file, userId } = req;
       const body = JSON.parse(req.body.data);
-      console.log(userId);
       const {
         dataFromChild1: title,
         dataFromChild2: skills,
