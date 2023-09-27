@@ -4,7 +4,10 @@ import HttpError from 'http-errors';
 import _ from 'lodash';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidV4 } from 'uuid';
-import { Users, Cvs, Reports } from '../models/index';
+import { Sequelize } from 'sequelize';
+import {
+  Users, Cvs, Reports, Messages,
+} from '../models/index';
 import Mail from '../services/Mail';
 
 const { JWT_SECRET } = process.env;
@@ -194,6 +197,7 @@ class UsersController {
   };
 
   static list = async (req, res, next) => {
+    const { userId } = req;
     try {
       const {
         page = 1,
@@ -230,23 +234,132 @@ class UsersController {
         where,
       });
 
-      let user = {};
+      let currentUser = {};
       if (id) {
-        user = await Users.findByPk(id);
-        if (user.status === 'active') {
-          user.status = 'block';
+        currentUser = await Users.findByPk(id);
+        if (currentUser.status === 'active') {
+          currentUser.status = 'block';
         } else {
-          user.status = 'active';
+          currentUser.status = 'active';
         }
-        await user.save();
+        await currentUser.save();
       }
-      console.log(user, 'user');
+      console.log(currentUser, 'user');
+      const usersForMessages = await Users.findAll({
+        where,
+        include: [
+          {
+            model: Messages,
+            as: 'messagesTo',
+            attributes: [],
+            required: false,
+            where: {
+              $or: [
+                { to: userId },
+                { from: userId },
+              ],
+            },
+          },
+          {
+            model: Messages,
+            as: 'messagesFrom',
+            attributes: [],
+            required: false,
+            where: {
+              $or: [
+                { to: userId },
+                { from: userId },
+              ],
+            },
+          },
+        ],
+        group: ['id'],
+        logging: true,
+        having: Sequelize.literal('COUNT(`messagesTo`.`id`) > 0 OR COUNT(`messagesFrom`.`id`) > 0'),
+        order: [
+          [
+            Sequelize.literal('GREATEST(COALESCE(max(`messagesTo`.`createdAt`), 0), COALESCE(max(`messagesFrom`.`createdAt`), 0))'),
+            'DESC',
+          ],
+        ],
+      });
+
+      // const data = await Messages.findAll({
+      //   attributes: [
+      //     [Sequelize.literal('ANY_VALUE(text)'), 'text'],
+      //     [Sequelize.literal(`ANY_VALUE(IF(\`from\` = ${userId}, \`to\`, \`from\`))`),
+      //     'friendId'],
+      //   ],
+      //   where: {
+      //     $or: [
+      //       {
+      //         to: usersForMessages.map((d) => d.id),
+      //         from: userId,
+      //       },
+      //       {
+      //         from: usersForMessages.map((d) => d.id),
+      //         to: userId,
+      //       },
+      //     ],
+      //   },
+      //   group: [Sequelize.literal(`IF(\`from\` = ${userId} ,
+      //   \`from\`, \`to\`), IF(\`from\` = ${userId} , \`to\`, \`from\`)`)],
+      //   order: [[Sequelize.literal('MAX(createdAt)'), 'ASC']],
+      //   logging: true,
+      //   raw: true,
+      // });
+
+      const latestMessages = await Messages.findAll({
+        attributes: [
+          [Sequelize.literal('MAX(createdAt)'), 'latestCreatedAt'],
+        ],
+        where: {
+          $or: [
+            {
+              to: usersForMessages.map((d) => d.id),
+              from: userId,
+            },
+            {
+              from: usersForMessages.map((d) => d.id),
+              to: userId,
+            },
+          ],
+        },
+        group: [Sequelize.literal(`IF(\`from\` = ${userId} , \`from\`, \`to\`), IF(\`from\` = ${userId} , \`to\`, \`from\`)`)],
+        raw: true,
+      });
+
+      const latestMessagesIds = await Messages.findAll({
+        attributes: ['id'],
+        where: {
+          createdAt: latestMessages.map((message) => message.latestCreatedAt),
+        },
+      });
+
+      const latestMessageIdsArray = latestMessagesIds.map((message) => message.id);
+
+      const latestMessagesData = await Messages.findAll({
+        where: {
+          id: latestMessageIdsArray,
+        },
+        raw: true,
+      });
+
+      usersForMessages.forEach((user) => {
+        user.lastMessage = latestMessagesData.find(
+          (d) => +d.to === +user.id || +d.from === +user.id,
+        );
+        user.setDataValue('lastMessage', user.lastMessage);
+      });
+
       res.json({
         status: 'ok',
         totalUsers: count,
+        // data,
         totalPages,
         currentPage: +page,
         users: usersList,
+        usersForMessages,
       });
     } catch (e) {
       next(e);
@@ -285,7 +398,7 @@ class UsersController {
             required: false,
           },
         ],
-        raw: true,
+        raw: false,
       });
 
       res.json({
@@ -382,7 +495,96 @@ class UsersController {
       res.json({
         blocked,
       });
-      console.log(blocked);
+    } catch (e) {
+      next(e);
+    }
+  };
+
+  static editProfile = async (req, res, next) => {
+    try {
+      const { userId } = req;
+      const { file } = req;
+      const data = req.body;
+      const user = await Users.findByPk(userId);
+      const cv = await Cvs.findOne({
+        where: {
+          userId,
+        },
+      });
+      if (data.userName) {
+        user.firstName = data.userName;
+      }
+      if (data.surname) {
+        user.lastName = data.surname;
+      }
+      let location = null;
+      if (data.address && data.address.longitude && data.address.latitude) {
+        location = {
+          type: 'Point',
+          coordinates: [data.address.longitude, data.address.latitude],
+        };
+      }
+      let avatar;
+      if (file) {
+        avatar = path.join(`/images/users/${uuidV4()}_${file.originalname}`);
+        const filePath = path.resolve(path.join('public', avatar));
+        fs.writeFileSync(filePath, file.buffer);
+      }
+      user.phone = data.phoneNumber;
+      user.location = location;
+      user.country = data.address.country;
+      user.city = data.address.city;
+      user.avatar = avatar;
+      await user.save();
+      if (cv) {
+        cv.skills = data.addSkill;
+        cv.phoneNumber = data.phoneNumber;
+        cv.language = data.addLanguages;
+        cv.location = location;
+        cv.country = data.address.country;
+        cv.city = data.address.city;
+        cv.school = data.education;
+        cv.degree = data.subject;
+        cv.experience = data.profession.label || '';
+        await cv.save();
+      } else if (!cv) {
+        await Cvs.create({
+          userId,
+          skills: data.addSkill,
+          phoneNumber: data.phoneNumber,
+          language: data.addLanguages,
+          location,
+          country: data.address.country,
+          city: data.address.city,
+          school: data.education,
+          degree: data.subject,
+          experience: data.profession.label || '',
+        });
+      }
+
+      res.json({
+        user,
+        cv,
+      });
+    } catch (e) {
+      next(e);
+    }
+  };
+
+  static editUserAbout = async (req, res, next) => {
+    try {
+      const { userId } = req;
+      const { data } = req.body;
+      const cv = await Cvs.findOne({
+        where: {
+          userId,
+        },
+      });
+      cv.bio = data.bio;
+      await cv.save();
+      res.json({
+        cv,
+      });
     } catch (e) {
       next(e);
     }

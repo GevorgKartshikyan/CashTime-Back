@@ -5,3 +5,4 @@ export { default as Messages } from './Messages';
 export { default as Reports } from './Reports';
 export { default as Countries } from './Countries';
 export { default as SkillsBase } from './SkillsBase';
+export { default as Notification } from './Notification';

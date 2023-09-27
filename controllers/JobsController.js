@@ -18,7 +18,6 @@ class JobsController {
       const where = {
         status: 'active',
         alreadyDone: false,
-        userId: !userId,
       };
       if (title) {
         where.title = { $like: `%${title}%` };
@@ -113,6 +112,7 @@ class JobsController {
     try {
       const { file, userId } = req;
       const body = JSON.parse(req.body.data);
+      console.log(userId);
       const {
         dataFromChild1: title,
         dataFromChild2: skills,

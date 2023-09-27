@@ -1,11 +1,12 @@
-import { Socket } from 'socket.io';
+import HttpError from 'http-errors';
+import Socket from '../services/Socket';
 import { Messages } from '../models/index';
 
 class MessagesController {
   static send = async (req, res, next) => {
     try {
-      const { text = '', friendId } = req.body;
       const { userId } = req;
+      const { text = '', friendId } = req.body;
       const message = await Messages.create({
         text,
         to: friendId,
@@ -24,8 +25,7 @@ class MessagesController {
   static list = async (req, res, next) => {
     try {
       const { userId } = req;
-      const { friendId, limit = 20, page } = req.query;
-      // console.log(req.query);
+      const { friendId } = req.query;
 
       const messages = await Messages.findAll({
         where: {
@@ -34,14 +34,57 @@ class MessagesController {
             { to: friendId, from: userId },
           ],
         },
-        limit: +limit,
-        offset: (page - 1) * limit,
         order: [['createdAt', 'desc']],
       });
 
       res.json({
         status: 'ok',
         messages,
+      });
+    } catch (e) {
+      next(e);
+    }
+  };
+
+  static open = async (req, res, next) => {
+    try {
+      const { userId } = req;
+      const { id } = req.body;
+      const message = await Messages.findOne({
+        where: {
+          id,
+          to: userId,
+        },
+      });
+      if (!message) {
+        throw HttpError(404);
+      }
+      message.seen = new Date();
+      await message.save();
+
+      Socket.emitUser(message.from, 'open_message', message);
+
+      res.json({
+        status: 'ok',
+        message,
+      });
+    } catch (e) {
+      next(e);
+    }
+  };
+
+  static newMessages = async (req, res, next) => {
+    try {
+      const { userId } = req;
+      const newMessages = await Messages.count({
+        where: {
+          to: userId,
+          seen: null,
+        },
+      });
+      res.json({
+        status: 'ok',
+        newMessages,
       });
     } catch (e) {
       next(e);
