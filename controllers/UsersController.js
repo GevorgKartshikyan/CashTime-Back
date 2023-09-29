@@ -631,25 +631,30 @@ class UsersController {
           coordinates: [data.address.longitude, data.address.latitude],
         };
       }
-      let avatar;
+      let avatar = '' || user.avatar;
       if (file) {
         avatar = path.join(`/images/users/${uuidV4()}_${file.originalname}`);
         const filePath = path.resolve(path.join('public', avatar));
         fs.writeFileSync(filePath, file.buffer);
       }
       user.phone = data.phoneNumber;
-      user.location = location;
-      user.country = data.address.country;
-      user.city = data.address.city;
+      if (location) {
+        user.location = location;
+        user.country = data.address?.country;
+        user.city = data.address?.city;
+      }
       user.avatar = avatar;
+      console.log(data.addSkill, 777);
       await user.save();
       if (cv) {
-        cv.skills = data.addSkill;
+        cv.skills = data.addSkill || [];
         cv.phoneNumber = data.phoneNumber;
         cv.language = data.addLanguages;
-        cv.location = location;
-        cv.country = data.address.country;
-        cv.city = data.address.city;
+        if (location) {
+          cv.location = location;
+          cv.country = data.address?.country;
+          cv.city = data.address?.city;
+        }
         cv.school = data.education;
         cv.degree = data.subject;
         cv.experience = data.profession.label || '';
@@ -657,7 +662,7 @@ class UsersController {
       } else if (!cv) {
         await Cvs.create({
           userId,
-          skills: data.addSkill,
+          skills: data.addSkill || [],
           phoneNumber: data.phoneNumber,
           language: data.addLanguages,
           location,
@@ -670,6 +675,7 @@ class UsersController {
       }
 
       res.json({
+        status: 'ok',
         user,
         cv,
       });
@@ -688,9 +694,10 @@ class UsersController {
         },
       });
       cv.bio = data.bio;
-      await cv.save();
+      console.log(data.bio);
+      const updatedCv = await cv.save();
       res.json({
-        cv,
+        updatedCv,
       });
     } catch (e) {
       next(e);

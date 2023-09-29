@@ -80,14 +80,6 @@ Users.init({
   avatar: {
     type: DataTypes.STRING,
     allowNull: true,
-    get() {
-      const avatar = this.getDataValue('avatar');
-      if (avatar) {
-        return avatar;
-      }
-      const email = this.getDataValue('email').toLowerCase();
-      return `https://www.gravatar.com/avatar/${md5(email)}?d=wavatar`;
-    },
   },
   totalJobs: {
     type: DataTypes.BIGINT.UNSIGNED,
