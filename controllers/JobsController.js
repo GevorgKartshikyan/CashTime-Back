@@ -392,12 +392,27 @@ class JobsController {
       const jobsTitles = await Jobs.findAll({
         where: {
           userId,
+          status: 'active',
+          alreadyDone: false,
         },
         attributes: ['id', 'title'],
       });
       res.json({
         status: 'ok',
         jobsTitlesArray: jobsTitles,
+      });
+    } catch (e) {
+      next(e);
+    }
+  };
+
+  static userSingleJobInfo = async (req, res, next) => {
+    try {
+      const { id } = req.query;
+      const userJob = await Jobs.findByPk(id);
+      res.json({
+        status: 'ok',
+        userJob,
       });
     } catch (e) {
       next(e);
