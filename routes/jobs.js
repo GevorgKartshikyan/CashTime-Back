@@ -26,6 +26,7 @@ router.post('/job-done', JobsController.jobDone);
 router.post('/job-activate', JobsController.activateJob);
 router.post('/job-delete', JobsController.deleteJob);
 router.get('/job-singe-info', JobsController.singleJobInfo);
+router.get('/user-job-info', JobsController.userSingleJobInfo);
 router.get('/jobs-title', JobsController.jobsTitles);
 router.post('/job-edit', upload.single('jobImage'), JobsController.editJob);
 export default router;

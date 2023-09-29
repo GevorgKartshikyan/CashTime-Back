@@ -129,7 +129,50 @@ class NotificationController {
           {
             model: Users,
             as: 'userFrom',
-            attributes: ['firstName', 'avatar', 'id', 'lastName'],
+            attributes: ['firstName', 'avatar', 'id', 'lastName', 'country', 'city'],
+            required: true,
+          },
+          {
+            model: Jobs,
+            as: 'fromJob',
+            attributes: ['id', 'title'],
+            required: false,
+          },
+        ],
+        raw: true,
+      });
+      const totalPages = Math.ceil(count / limit);
+      res.json({
+        status: 'ok',
+        notices,
+        currentPage: +page,
+        totalPages,
+        count,
+      });
+    } catch (e) {
+      next(e);
+    }
+  };
+
+  static noticeListForSingleJobs = async (req, res, next) => {
+    try {
+      const { userId } = req;
+      const { page = 1, limit = 5, jobId } = req.query;
+      const offset = (page - 1) * limit;
+      console.log(jobId, 9999999999);
+      const { count, rows: notices } = await Notification.findAndCountAll({
+        where: {
+          noticeTo: userId,
+          done: false,
+          noticeJobTo: jobId,
+        },
+        offset,
+        limit: +limit,
+        include: [
+          {
+            model: Users,
+            as: 'userFrom',
+            attributes: ['firstName', 'avatar', 'id', 'lastName', 'country', 'city'],
             required: true,
           },
           {

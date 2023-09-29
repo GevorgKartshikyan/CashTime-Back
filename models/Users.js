@@ -91,6 +91,11 @@ Users.init({
     allowNull: true,
     default: 0,
   },
+  isTyping: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+  },
 }, {
   sequelize,
   modelName: 'users',
