@@ -22,6 +22,9 @@ const upload = multer({
 router.post('/register', upload.single('avatar'), UsersController.register);
 router.post('/login', UsersController.login);
 router.post('/activate', UsersController.activate);
+router.post('/deleteProfile', UsersController.deleteProfile);
+router.post('/resetPassword', UsersController.resetPassword);
+router.post('/resetPasswordConfirm', UsersController.resetPasswordConfirm);
 router.get('/list', UsersController.list);
 router.get('/single/:userId', UsersController.singleUser);
 router.get('/singleUserFromAdmin', UsersController.singleUserFromAdmin);

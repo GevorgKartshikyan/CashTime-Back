@@ -22,7 +22,7 @@ Users.init({
     allowNull: true,
   },
   status: {
-    type: DataTypes.ENUM('pending', 'active', 'block'),
+    type: DataTypes.ENUM('pending', 'active', 'block', 'deleted'),
     allowNull: false,
   },
   email: {

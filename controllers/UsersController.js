@@ -196,6 +196,102 @@ class UsersController {
     }
   };
 
+  static resetPassword = async (req, res, next) => {
+    try {
+      const { userId } = req;
+      const { userEmail } = req.body;
+
+      let user;
+
+      if (userId) {
+        user = await Users.findOne({
+          where: {
+            id: userId,
+          },
+        });
+      } else {
+        user = await Users.findOne({
+          where: {
+            email: userEmail,
+          },
+        });
+      }
+
+      if (!user) {
+        throw HttpError(401, 'Wrong email');
+      }
+
+      const { email, firstName, lastName } = user;
+
+      const validationCode = _.random(1000, 9999);
+
+      await Mail.send(email, 'Reset Password', 'userPasswordReset', {
+        email,
+        firstName,
+        lastName,
+        validationCode,
+      });
+
+      res.json({
+        status: 'ok',
+        validationCode,
+      });
+    } catch (e) {
+      next(e);
+    }
+  };
+
+  static resetPasswordConfirm = async (req, res, next) => {
+    try {
+      const { userId } = req;
+      const { newPassword } = req.body;
+
+      const user = await Users.findOne({
+        where: {
+          id: userId,
+        },
+      });
+
+      user.password = newPassword;
+      await user.save();
+
+      res.json({
+        status: 'ok',
+        user,
+      });
+    } catch (e) {
+      next(e);
+    }
+  };
+
+  static deleteProfile = async (req, res, next) => {
+    try {
+      const { userId } = req;
+      const { password } = req.body;
+
+      const user = await Users.findOne({
+        where: {
+          id: userId,
+          password: Users.passwordHash(password),
+        },
+      });
+
+      if (!user) {
+        throw HttpError(401, 'Wrong password');
+      }
+
+      user.status = 'deleted';
+      await user.save();
+
+      res.json({
+        status: 'ok',
+        user,
+      });
+    } catch (e) {
+      next(e);
+    }
+  };
+
   static list = async (req, res, next) => {
     const { userId } = req;
     try {
