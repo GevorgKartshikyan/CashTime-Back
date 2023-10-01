@@ -1,6 +1,6 @@
 import HttpError from 'http-errors';
 import Socket from '../services/Socket';
-import { Messages } from '../models/index';
+import { Messages, Users } from '../models/index';
 
 class MessagesController {
   static send = async (req, res, next) => {
@@ -85,6 +85,22 @@ class MessagesController {
       res.json({
         status: 'ok',
         newMessages,
+      });
+    } catch (e) {
+      next(e);
+    }
+  };
+
+  static friendTyping = async (req, res, next) => {
+    try {
+      const { isTyping, friendId } = req.body;
+      const friend = await Users.findByPk(friendId);
+      friend.isTyping = isTyping;
+      await friend.save();
+      Socket.emitUser(friendId, 'typing', friend.isTyping);
+      res.json({
+        status: 'ok',
+        isTyping: friend.isTyping,
       });
     } catch (e) {
       next(e);

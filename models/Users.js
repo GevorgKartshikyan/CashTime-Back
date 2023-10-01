@@ -22,7 +22,7 @@ Users.init({
     allowNull: true,
   },
   status: {
-    type: DataTypes.ENUM('pending', 'active', 'block'),
+    type: DataTypes.ENUM('pending', 'active', 'block', 'deleted'),
     allowNull: false,
   },
   email: {
@@ -80,14 +80,6 @@ Users.init({
   avatar: {
     type: DataTypes.STRING,
     allowNull: true,
-    get() {
-      const avatar = this.getDataValue('avatar');
-      if (avatar) {
-        return avatar;
-      }
-      const email = this.getDataValue('email').toLowerCase();
-      return `https://www.gravatar.com/avatar/${md5(email)}?d=wavatar`;
-    },
   },
   totalJobs: {
     type: DataTypes.BIGINT.UNSIGNED,
@@ -98,6 +90,11 @@ Users.init({
     type: DataTypes.BIGINT.UNSIGNED,
     allowNull: true,
     default: 0,
+  },
+  isTyping: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
   },
 }, {
   sequelize,

@@ -23,6 +23,9 @@ const upload = multer({
 router.post('/register', upload.single('avatar'), UsersController.register);
 router.post('/login', UsersController.login);
 router.post('/activate', UsersController.activate);
+router.post('/deleteProfile', UsersController.deleteProfile);
+router.post('/resetPassword', UsersController.resetPassword);
+router.post('/resetPasswordConfirm', UsersController.resetPasswordConfirm);
 router.get('/list', UsersController.list);
 router.get('/single/:userId', UsersController.singleUser);
 router.get('/singleUserFromAdmin', UsersController.singleUserFromAdmin);
@@ -32,4 +35,6 @@ router.get('/change-role', UsersController.changeRole);
 router.get('/blockedUsers', UsersController.blockedUsers);
 router.put('/edit-employee', upload.single('avatar'), UsersController.editProfile);
 router.put('/edit-employee-about', UsersController.editUserAbout);
+router.get('/blocked-users', UsersController.blockedUsers);
+
 export default router;

@@ -196,13 +196,109 @@ class UsersController {
     }
   };
 
+  static resetPassword = async (req, res, next) => {
+    try {
+      const { userId } = req;
+      const { userEmail } = req.body;
+
+      let user;
+
+      if (userId) {
+        user = await Users.findOne({
+          where: {
+            id: userId,
+          },
+        });
+      } else {
+        user = await Users.findOne({
+          where: {
+            email: userEmail,
+          },
+        });
+      }
+
+      if (!user) {
+        throw HttpError(401, 'Wrong email');
+      }
+
+      const { email, firstName, lastName } = user;
+
+      const validationCode = _.random(1000, 9999);
+
+      await Mail.send(email, 'Reset Password', 'userPasswordReset', {
+        email,
+        firstName,
+        lastName,
+        validationCode,
+      });
+
+      res.json({
+        status: 'ok',
+        validationCode,
+      });
+    } catch (e) {
+      next(e);
+    }
+  };
+
+  static resetPasswordConfirm = async (req, res, next) => {
+    try {
+      const { userId } = req;
+      const { newPassword } = req.body;
+
+      const user = await Users.findOne({
+        where: {
+          id: userId,
+        },
+      });
+
+      user.password = newPassword;
+      await user.save();
+
+      res.json({
+        status: 'ok',
+        user,
+      });
+    } catch (e) {
+      next(e);
+    }
+  };
+
+  static deleteProfile = async (req, res, next) => {
+    try {
+      const { userId } = req;
+      const { password } = req.body;
+
+      const user = await Users.findOne({
+        where: {
+          id: userId,
+          password: Users.passwordHash(password),
+        },
+      });
+
+      if (!user) {
+        throw HttpError(401, 'Wrong password');
+      }
+
+      user.status = 'deleted';
+      await user.save();
+
+      res.json({
+        status: 'ok',
+        user,
+      });
+    } catch (e) {
+      next(e);
+    }
+  };
+
   static list = async (req, res, next) => {
     const { userId } = req;
     try {
       const {
         page = 1,
         limit = 5,
-        role,
+        role = '',
         search,
         id = undefined,
       } = req.query;
@@ -221,8 +317,9 @@ class UsersController {
           { email: { $like: `%${search}%` } },
         ];
       }
-
-      where.role = role;
+      if (role) {
+        where.role = role;
+      }
       const count = await Users.count({
         where,
       });
@@ -479,7 +576,12 @@ class UsersController {
 
   static blockedUsers = async (req, res, next) => {
     try {
-      const blocked = await Users.findAll({
+      const {
+        page = 1,
+        limit = 6,
+      } = req.query;
+      const offset = (+page - 1) * +limit;
+      const { count, rows: blocked } = await Users.findAndCountAll({
         where: {
           status: 'block',
         },
@@ -491,9 +593,14 @@ class UsersController {
           },
         ],
         raw: true,
+        limit: +limit,
+        offset,
       });
+      const totalBlockedPages = Math.ceil(count / limit);
       res.json({
         blocked,
+        totalBlockedPages,
+        currentPage: +page,
       });
     } catch (e) {
       next(e);
@@ -524,25 +631,30 @@ class UsersController {
           coordinates: [data.address.longitude, data.address.latitude],
         };
       }
-      let avatar;
+      let avatar = '' || user.avatar;
       if (file) {
         avatar = path.join(`/images/users/${uuidV4()}_${file.originalname}`);
         const filePath = path.resolve(path.join('public', avatar));
         fs.writeFileSync(filePath, file.buffer);
       }
       user.phone = data.phoneNumber;
-      user.location = location;
-      user.country = data.address.country;
-      user.city = data.address.city;
+      if (location) {
+        user.location = location;
+        user.country = data.address?.country;
+        user.city = data.address?.city;
+      }
       user.avatar = avatar;
+      console.log(data.addSkill, 777);
       await user.save();
       if (cv) {
-        cv.skills = data.addSkill;
+        cv.skills = data.addSkill || [];
         cv.phoneNumber = data.phoneNumber;
         cv.language = data.addLanguages;
-        cv.location = location;
-        cv.country = data.address.country;
-        cv.city = data.address.city;
+        if (location) {
+          cv.location = location;
+          cv.country = data.address?.country;
+          cv.city = data.address?.city;
+        }
         cv.school = data.education;
         cv.degree = data.subject;
         cv.experience = data.profession.label || '';
@@ -550,7 +662,7 @@ class UsersController {
       } else if (!cv) {
         await Cvs.create({
           userId,
-          skills: data.addSkill,
+          skills: data.addSkill || [],
           phoneNumber: data.phoneNumber,
           language: data.addLanguages,
           location,
@@ -563,6 +675,7 @@ class UsersController {
       }
 
       res.json({
+        status: 'ok',
         user,
         cv,
       });
@@ -581,9 +694,10 @@ class UsersController {
         },
       });
       cv.bio = data.bio;
-      await cv.save();
+      console.log(data.bio);
+      const updatedCv = await cv.save();
       res.json({
-        cv,
+        updatedCv,
       });
     } catch (e) {
       next(e);
