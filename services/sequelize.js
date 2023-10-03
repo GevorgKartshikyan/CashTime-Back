@@ -15,6 +15,7 @@ const operatorsAliases = {
   $gte: Op.gte,
   $between: Op.between,
   $ne: Op.ne,
+  $gt: Op.gt,
 };
 
 const sequelize = new Sequelize(MYSQL_DATABASE, MYSQL_USER, MYSQL_PASSWORD, {

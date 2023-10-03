@@ -50,7 +50,6 @@ class JobsController {
       const maxPriceFixed = +jobType.salary_max;
       const maxPriceHourly = +jobType.hour_max;
       const minPriceHourly = +jobType.hour_min;
-      // eslint-disable-next-line max-len
       if (maxPriceFixed && minPriceFixed && !Number.isNaN(maxPriceFixed) && !Number.isNaN(minPriceFixed) && priceMethod.includes('Project Budget')) {
         where.priceFixed = {
           $between: [minPriceFixed, maxPriceFixed],
@@ -95,7 +94,7 @@ class JobsController {
         orderBy = [['createdAt', 'DESC']];
       }
 
-      const { count, rows: jobs } = await Jobs.findAndCountAll({
+      const jobs = await Jobs.findAll({
         where,
         offset,
         limit: +limit,
@@ -109,6 +108,17 @@ class JobsController {
           },
         ],
         raw: true,
+      });
+      const count = await Jobs.count({
+        where,
+        include: [
+          {
+            model: Users,
+            as: 'creator',
+            attributes: ['firstName', 'lastName', 'avatar'],
+            required: true,
+          },
+        ],
       });
       const totalPages = Math.ceil(count / limit);
       res.json({
@@ -250,7 +260,6 @@ class JobsController {
   static activateJob = async (req, res, next) => {
     try {
       const { jobId } = req.body;
-      console.log(jobId);
       const job = await Jobs.findOne({
         where: {
           id: jobId,
@@ -290,7 +299,7 @@ class JobsController {
     try {
       const { page = 1, limit = 5 } = req.query;
       const offset = (page - 1) * limit;
-      const { count, rows: jobs } = await Jobs.findAndCountAll({
+      const jobs = await Jobs.findAll({
         where: {
           status: 'pending',
         },
@@ -306,6 +315,11 @@ class JobsController {
         ],
         raw: true,
       });
+      const count = await Jobs.count({
+        where: {
+          status: 'pending',
+        },
+      });
       const totalPages = Math.ceil(count / limit);
       res.json({
         jobs,
@@ -320,14 +334,29 @@ class JobsController {
   static jobsListFromUsersMap = async (req, res, next) => {
     try {
       const { city } = req.query;
-      const whereCondition = {
-        alreadyDone: false,
+      const { userId } = req;
+      const jobNotices = await Notification.findAll({
+        where: {
+          noticeFrom: userId,
+        },
+      });
+      const where = {
         status: 'active',
+        alreadyDone: false,
+        userId: {
+          $ne: userId,
+        },
         city,
+
       };
-      const { rows: jobs } = await Jobs.findAndCountAll(
+      if (jobNotices) {
+        const noShowWorks = jobNotices.map((e) => e.noticeJobTo);
+        const uniqId = [...new Set(noShowWorks)];
+        where.id = { $notIn: uniqId };
+      }
+      const { rows: jobs } = await Jobs.findAll(
         {
-          where: whereCondition,
+          where,
           include: [
             {
               model: Users,
