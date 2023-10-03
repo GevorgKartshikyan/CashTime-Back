@@ -2,7 +2,9 @@ import path from 'path';
 import fs from 'fs';
 import { v4 as uuidV4 } from 'uuid';
 import HttpError from 'http-errors';
+import { Op } from 'sequelize';
 import Cvs from '../models/Cvs';
+import Users from '../models/Users';
 
 class CvsController {
   static createCv = async (req, res, next) => {
@@ -95,93 +97,81 @@ class CvsController {
       next(e);
     }
   };
-  // static activateJob = async (req, res, next) => {
-  //   try {
-  //     const jobId = 1;
-  //     const job = await Jobs.findOne({
-  //       where: {
-  //         id: jobId,
-  //         status: 'pending',
-  //       },
-  //     });
-  //     job.status = 'active';
-  //     await job.save();
-  //     res.send({
-  //       status: 'ok',
-  //       job,
-  //     });
-  //   } catch (e) {
-  //     next(e);
-  //   }
-  // };
-  //
-  // static deleteJob = async (req, res, next) => {
-  //   try {
-  //     const jobId = 1;
-  //     const job = await Jobs.findOne({
-  //       where: {
-  //         id: jobId,
-  //       },
-  //     });
-  //     await job.destroy();
-  //     res.send({
-  //       status: 'ok',
-  //       job,
-  //     });
-  //   } catch (e) {
-  //     next(e);
-  //   }
-  // };
-  //
-  // static allJobListFromAdmin = async (req, res, next) => {
-  //   try {
-  //     const { page = 1, limit = 20 } = req.query;
-  //     const offset = (page - 1) * limit;
-  //     const jobs = await Jobs.findAll({
-  //       offset,
-  //       limit: +limit,
-  //     });
-  //     const count = await Jobs.count();
-  //     const totalPages = Math.ceil(count / limit);
-  //     res.json({
-  //       jobs,
-  //       currentPage: +page,
-  //       totalPages,
-  //     });
-  //   } catch (e) {
-  //     next(e);
-  //   }
-  // };
-  //
-  // static jobsListFromUsers = async (req, res, next) => {
-  //   try {
-  //     const { page = 1, limit = 20 } = req.query;
-  //     const offset = (page - 1) * limit;
-  //     const whereCondition = {
-  //       alreadyDone: false,
-  //       status: 'active',
-  //     };
-  //
-  //     const jobs = await Jobs.findAll({
-  //       where: whereCondition,
-  //       offset,
-  //       limit: +limit,
-  //     });
-  //
-  //     const count = await Jobs.count({
-  //       where: whereCondition,
-  //     });
-  //
-  //     const totalPages = Math.ceil(count / limit);
-  //
-  //     res.json({
-  //       jobs,
-  //       currentPage: +page,
-  //       totalPages,
-  //     });
-  //   } catch (e) {
-  //     next(e);
-  //   }
-  // };
+
+  static usersData = async (req, res, next) => {
+    try {
+      const {
+        entryLevel, expert, intermediate, hourMin, hourMax, profRole, location,
+      } = req.body.data;
+      console.log(req.query);
+      const { page, limit } = req.query;
+      const offset = (page - 1) * limit;
+      console.log(limit, offset, 99999999999);
+      const { userId = 7 } = req;
+      const experienceArr = [];
+      const where = {
+        id: {
+          [Op.ne]: userId,
+        },
+      };
+      if (entryLevel) {
+        experienceArr.push('This is My Very First Time');
+      }
+      if (expert) {
+        experienceArr.push('Expert');
+      }
+      if (intermediate) {
+        experienceArr.push('Intermediate');
+      }
+      const cvWhere = {};
+      if (entryLevel || expert || intermediate) {
+        cvWhere.experience = { [Op.or]: experienceArr };
+      }
+      if (hourMin && hourMax) {
+        cvWhere.hourlyRate = { $between: [hourMin, hourMax] };
+      }
+      if (profRole) {
+        cvWhere.profRole = { $like: `${profRole}%` };
+      }
+      if (location) {
+        console.log(location);
+        where.city = { $like: `${location}%` };
+      }
+      const users = await Users.findAll({
+        where,
+        limit: +limit,
+        offset,
+        include: [
+          {
+            as: 'createdCvs',
+            model: Cvs,
+            required: true,
+            where: cvWhere,
+          },
+        ],
+        raw: false,
+      });
+      const count = await Users.count({
+        where,
+        include: [
+          {
+            as: 'createdCvs',
+            model: Cvs,
+            required: true,
+            where: cvWhere,
+          },
+        ],
+        raw: false,
+      });
+      res.json({
+        users,
+        totalPages: Math.ceil(count / limit),
+        status: 'ok',
+      });
+    } catch (e) {
+      console.error(e);
+      next(e);
+    }
+  };
 }
 export default CvsController;
