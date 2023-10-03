@@ -18,7 +18,7 @@ class JobsController {
       const where = {
         status: 'active',
         alreadyDone: false,
-        // userId: !userId,
+        userId: !userId,
       };
       if (title) {
         where.title = { $like: `%${title}%` };

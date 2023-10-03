@@ -1,6 +1,7 @@
 import path from 'path';
 import fs from 'fs';
 import { v4 as uuidV4 } from 'uuid';
+import { Op } from 'sequelize';
 import Cvs from '../models/Cvs';
 import Users from '../models/Users';
 
@@ -90,21 +91,72 @@ class CvsController {
 
   static usersData = async (req, res, next) => {
     try {
-      const data = req.body;
-      console.log(data);
+      const {
+        entryLevel, expert, intermediate, hourMin, hourMax, profRole, location,
+      } = req.body.data;
+      console.log(req.query);
+      const { page, limit } = req.query;
+      const offset = (page - 1) * limit;
+      console.log(limit, offset, 99999999999);
+      const { userId = 7 } = req;
+      const experienceArr = [];
+      const where = {
+        id: {
+          [Op.ne]: userId,
+        },
+      };
+      if (entryLevel) {
+        experienceArr.push('This is My Very First Time');
+      }
+      if (expert) {
+        experienceArr.push('Expert');
+      }
+      if (intermediate) {
+        experienceArr.push('Intermediate');
+      }
+      const cvWhere = {};
+      if (entryLevel || expert || intermediate) {
+        cvWhere.experience = { [Op.or]: experienceArr };
+      }
+      if (hourMin && hourMax) {
+        cvWhere.hourlyRate = { $between: [hourMin, hourMax] };
+      }
+      if (profRole) {
+        cvWhere.profRole = { $like: `${profRole}%` };
+      }
+      if (location) {
+        console.log(location);
+        where.city = { $like: `${location}%` };
+      }
       const users = await Users.findAll({
+        where,
+        limit: +limit,
+        offset,
         include: [
           {
             as: 'createdCvs',
             model: Cvs,
             required: true,
+            where: cvWhere,
           },
         ],
         raw: false,
       });
-      // console.log(users, 77777);
+      const count = await Users.count({
+        where,
+        include: [
+          {
+            as: 'createdCvs',
+            model: Cvs,
+            required: true,
+            where: cvWhere,
+          },
+        ],
+        raw: false,
+      });
       res.json({
         users,
+        totalPages: Math.ceil(count / limit),
         status: 'ok',
       });
     } catch (e) {
