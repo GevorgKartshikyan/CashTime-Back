@@ -153,6 +153,10 @@ class UsersController {
       if (!user) {
         throw HttpError(403, 'Invalid email or password');
       }
+
+      if (user.status === 'block') {
+        throw HttpError(403, 'This user is blocked');
+      }
       const token = jwt.sign({ userId: user.id }, JWT_SECRET);
 
       res.json({
