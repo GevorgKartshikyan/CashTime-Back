@@ -23,9 +23,9 @@ class JobsController {
       const where = {
         status: 'active',
         alreadyDone: false,
-        userId: {
-          $ne: userId,
-        },
+        // userId: {
+        //   $ne: userId,
+        // },
       };
       if (jobNotices) {
         const noShowWorks = jobNotices.map((e) => e.noticeJobTo);
@@ -354,7 +354,7 @@ class JobsController {
         const uniqId = [...new Set(noShowWorks)];
         where.id = { $notIn: uniqId };
       }
-      const { rows: jobs } = await Jobs.findAll(
+      const jobs = await Jobs.findAll(
         {
           where,
           include: [
@@ -369,6 +369,7 @@ class JobsController {
         },
       );
       res.json({
+        status: 'ok',
         jobs,
       });
     } catch (e) {

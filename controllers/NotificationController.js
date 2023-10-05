@@ -117,8 +117,7 @@ class NotificationController {
       const { userId } = req;
       const { page = 1, limit = 5 } = req.query;
       const offset = (page - 1) * limit;
-      console.log(page, limit);
-      const { count, rows: notices } = await Notification.findAndCountAll({
+      const notices = await Notification.findAll({
         where: {
           noticeTo: userId,
           done: false,
@@ -140,6 +139,12 @@ class NotificationController {
           },
         ],
         raw: true,
+      });
+      const count = await Notification.count({
+        where: {
+          noticeTo: userId,
+          done: false,
+        },
       });
       const totalPages = Math.ceil(count / limit);
       res.json({
