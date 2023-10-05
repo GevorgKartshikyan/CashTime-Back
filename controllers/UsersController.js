@@ -500,6 +500,7 @@ class UsersController {
         where: {
           status: 'block',
         },
+        order: [['createdAt', 'DESC']],
         include: [
           {
             as: 'report',

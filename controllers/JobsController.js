@@ -290,7 +290,12 @@ class JobsController {
     try {
       const { page = 1, limit = 5 } = req.query;
       const offset = (page - 1) * limit;
-      const { count, rows: jobs } = await Jobs.findAndCountAll({
+      const count = await Jobs.count({
+        where: {
+          status: 'pending',
+        },
+      });
+      const jobs = await Jobs.findAll({
         where: {
           status: 'pending',
         },
