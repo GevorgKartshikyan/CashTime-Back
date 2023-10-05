@@ -107,13 +107,9 @@ class CvsController {
       const { page, limit } = req.query;
       const offset = (page - 1) * limit;
       console.log(limit, offset, 99999999999);
-      const { userId = 7 } = req;
+      const { userId } = req;
       const experienceArr = [];
-      const where = {
-        id: {
-          [Op.ne]: userId,
-        },
-      };
+      const where = {};
       if (entryLevel) {
         experienceArr.push('This is My Very First Time');
       }
@@ -123,7 +119,11 @@ class CvsController {
       if (intermediate) {
         experienceArr.push('Intermediate');
       }
-      const cvWhere = {};
+      const cvWhere = {
+        userId: {
+          [Op.ne]: userId,
+        },
+      };
       if (entryLevel || expert || intermediate) {
         cvWhere.experience = { [Op.or]: experienceArr };
       }
