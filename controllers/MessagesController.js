@@ -27,6 +27,10 @@ class MessagesController {
       const { userId } = req;
       const { friendId } = req.query;
 
+      if (!friendId) {
+        throw HttpError(404, 'Dont found messages');
+      }
+
       const messages = await Messages.findAll({
         where: {
           $or: [
