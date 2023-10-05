@@ -305,7 +305,16 @@ class UsersController {
         role = '',
         search,
         id = undefined,
+        order,
       } = req.query;
+      let orderBy;
+      if (order === 'Newest') {
+        orderBy = [['createdAt', 'DESC']];
+      } else if (order === 'Latest') {
+        orderBy = [['createdAt', 'ASC']];
+      } else {
+        orderBy = [['createdAt', 'DESC']];
+      }
       if (Number.isNaN(+page) || Number.isNaN(+limit)) {
         throw HttpError(400, 'Page or limit is not a number');
       }
@@ -332,6 +341,7 @@ class UsersController {
       const usersList = await Users.findAll({
         limit: +limit,
         offset,
+        order: orderBy,
         where,
       });
 
@@ -345,6 +355,7 @@ class UsersController {
         }
         await currentUser.save();
       }
+
       console.log(currentUser, 'user');
       const usersForMessages = await Users.findAll({
         where,
@@ -589,6 +600,7 @@ class UsersController {
         where: {
           status: 'block',
         },
+        order: [['createdAt', 'DESC']],
         include: [
           {
             as: 'report',
