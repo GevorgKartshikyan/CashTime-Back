@@ -6,6 +6,8 @@ const EXCLUDE = [
   'POST:/users/login',
   'POST:/users/register',
   'POST:/users/activate',
+  'POST:/users/resetPassword',
+  'POST:/users/resetPasswordConfirm',
   'POST:/utils/create-countries',
   'POST:/utils/create-base-skills',
 ];

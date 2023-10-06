@@ -198,9 +198,8 @@ class UsersController {
 
   static resetPassword = async (req, res, next) => {
     try {
-      const { userId } = req;
-      const { userEmail } = req.body;
-
+      const { userEmail, userId } = req.body;
+      console.log(userId);
       let user;
 
       if (userId) {
@@ -209,12 +208,14 @@ class UsersController {
             id: userId,
           },
         });
-      } else {
+      } else if (userEmail) {
         user = await Users.findOne({
           where: {
             email: userEmail,
           },
         });
+      } else {
+        throw HttpError(400, 'Bad request');
       }
 
       if (!user) {
@@ -243,14 +244,25 @@ class UsersController {
 
   static resetPasswordConfirm = async (req, res, next) => {
     try {
-      const { userId } = req;
-      const { newPassword } = req.body;
-
-      const user = await Users.findOne({
-        where: {
-          id: userId,
-        },
-      });
+      const { newPassword, userEmail, userId } = req.body;
+      console.log(userId, 'userId');
+      console.log(newPassword, 'newPassword');
+      let user;
+      if (userId) {
+        user = await Users.findOne({
+          where: {
+            id: userId,
+          },
+        });
+      } else if (userEmail) {
+        user = await Users.findOne({
+          where: {
+            email: userEmail,
+          },
+        });
+      } else {
+        throw HttpError(400, 'Bad request');
+      }
 
       user.password = newPassword;
       await user.save();
