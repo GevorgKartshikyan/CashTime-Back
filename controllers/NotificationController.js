@@ -7,12 +7,13 @@ import Socket from '../services/Socket';
 class NotificationController {
   static sendNotice = async (req, res, next) => {
     try {
-      const { noticeTo, noticeJobTo } = req.body;
+      const { noticeTo, noticeJobTo, method } = req.body;
       const { userId } = req;
       const notice = await Notification.create({
         noticeTo,
         noticeFrom: userId,
         noticeJobTo,
+        method,
       });
       if (!notice) {
         throw HttpError(403, 'aaa');
