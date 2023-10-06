@@ -173,5 +173,41 @@ class CvsController {
       next(e);
     }
   };
+
+  static usersDataForMap = async (req, res, next) => {
+    try {
+      const { city } = req.body;
+      const { userId } = req;
+      const where = {};
+      const cvWhere = {
+        userId: {
+          [Op.ne]: userId,
+        },
+      };
+      if (city) {
+        where.city = city;
+      }
+      const users = await Users.findAll({
+        where,
+        include: [
+          {
+            as: 'createdCvs',
+            model: Cvs,
+            required: true,
+            where: cvWhere,
+          },
+        ],
+        raw: false,
+      });
+      console.log(users, 55555);
+      res.json({
+        users,
+        status: 'ok',
+      });
+    } catch (e) {
+      console.error(e);
+      next(e);
+    }
+  };
 }
 export default CvsController;
