@@ -354,7 +354,7 @@ class JobsController {
         const uniqId = [...new Set(noShowWorks)];
         where.id = { $notIn: uniqId };
       }
-      const { rows: jobs } = await Jobs.findAll(
+      const jobs = await Jobs.findAll(
         {
           where,
           include: [

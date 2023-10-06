@@ -470,8 +470,19 @@ class UsersController {
   static singleUser = async (req, res, next) => {
     try {
       const { userId } = req.params;
-
-      const user = await Users.findByPk(userId);
+      const user = await Users.findOne({
+        where: {
+          id: userId,
+        },
+        include: [
+          {
+            model: Cvs,
+            as: 'createdCvs',
+            required: false,
+          },
+        ],
+        raw: false,
+      });
       if (!user) {
         throw HttpError(404);
       }
