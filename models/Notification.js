@@ -17,6 +17,10 @@ Notification.init({
     type: DataTypes.BOOLEAN,
     defaultValue: false,
   },
+  method: {
+    type: DataTypes.ENUM('job', 'freelancer'),
+    allowNull: false,
+  },
 }, {
   sequelize,
   modelName: 'notification',
