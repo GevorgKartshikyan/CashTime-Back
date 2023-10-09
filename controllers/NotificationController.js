@@ -140,7 +140,6 @@ class NotificationController {
           },
         ],
         raw: true,
-        nest: true,
       });
       const count = await Notification.count({
         where: {
