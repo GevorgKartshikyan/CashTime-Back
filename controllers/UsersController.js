@@ -327,6 +327,7 @@ class UsersController {
       } else {
         orderBy = [['createdAt', 'DESC']];
       }
+      console.log(page, limit, 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
       if (Number.isNaN(+page) || Number.isNaN(+limit)) {
         throw HttpError(400, 'Page or limit is not a number');
       }
