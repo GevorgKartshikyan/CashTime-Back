@@ -7,12 +7,13 @@ import Socket from '../services/Socket';
 class NotificationController {
   static sendNotice = async (req, res, next) => {
     try {
-      const { noticeTo, noticeJobTo } = req.body;
+      const { noticeTo, noticeJobTo, method } = req.body;
       const { userId } = req;
       const notice = await Notification.create({
         noticeTo,
         noticeFrom: userId,
         noticeJobTo,
+        method,
       });
       if (!notice) {
         throw HttpError(403, 'aaa');
@@ -114,12 +115,12 @@ class NotificationController {
 
   static noticeList = async (req, res, next) => {
     try {
-      const { userId } = req;
+      const { userId = 5 } = req;
       const { page = 1, limit = 5 } = req.query;
       const offset = (page - 1) * limit;
       const notices = await Notification.findAll({
         where: {
-          noticeTo: userId,
+          noticeTo: userId || 5,
           done: false,
         },
         offset,

@@ -5,6 +5,7 @@ import HttpError from 'http-errors';
 import { Op } from 'sequelize';
 import Cvs from '../models/Cvs';
 import Users from '../models/Users';
+import { Notification } from '../models/index';
 
 class CvsController {
   static createCv = async (req, res, next) => {
@@ -137,6 +138,16 @@ class CvsController {
         console.log(location);
         where.city = { $like: `${location}%` };
       }
+      const userNotices = await Notification.findAll({
+        where: {
+          noticeFrom: userId,
+        },
+      });
+      if (userNotices) {
+        const noShowWorks = userNotices.map((e) => e.noticeTo);
+        const uniqId = [...new Set(noShowWorks)];
+        where.id = { $notIn: uniqId };
+      }
       const users = await Users.findAll({
         where,
         limit: +limit,
@@ -166,6 +177,52 @@ class CvsController {
       res.json({
         users,
         totalPages: Math.ceil(count / limit),
+        status: 'ok',
+      });
+    } catch (e) {
+      console.error(e);
+      next(e);
+    }
+  };
+
+  static usersDataForMap = async (req, res, next) => {
+    try {
+      const { city } = req.body;
+      const { userId } = req;
+      const where = {};
+      const cvWhere = {
+        userId: {
+          [Op.ne]: userId,
+        },
+      };
+      if (city) {
+        where.city = city;
+      }
+      const userNotices = await Notification.findAll({
+        where: {
+          noticeFrom: userId,
+        },
+      });
+      if (userNotices) {
+        const noShowWorks = userNotices.map((e) => e.noticeTo);
+        const uniqId = [...new Set(noShowWorks)];
+        where.id = { $notIn: uniqId };
+      }
+      const users = await Users.findAll({
+        where,
+        include: [
+          {
+            as: 'createdCvs',
+            model: Cvs,
+            required: true,
+            where: cvWhere,
+          },
+        ],
+        raw: false,
+      });
+      console.log(users, 55555);
+      res.json({
+        users,
         status: 'ok',
       });
     } catch (e) {

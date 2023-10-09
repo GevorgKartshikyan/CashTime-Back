@@ -202,9 +202,8 @@ class UsersController {
 
   static resetPassword = async (req, res, next) => {
     try {
-      const { userId } = req;
-      const { userEmail } = req.body;
-
+      const { userEmail, userId } = req.body;
+      console.log(userId);
       let user;
 
       if (userId) {
@@ -213,12 +212,14 @@ class UsersController {
             id: userId,
           },
         });
-      } else {
+      } else if (userEmail) {
         user = await Users.findOne({
           where: {
             email: userEmail,
           },
         });
+      } else {
+        throw HttpError(400, 'Bad request');
       }
 
       if (!user) {
@@ -247,14 +248,25 @@ class UsersController {
 
   static resetPasswordConfirm = async (req, res, next) => {
     try {
-      const { userId } = req;
-      const { newPassword } = req.body;
-
-      const user = await Users.findOne({
-        where: {
-          id: userId,
-        },
-      });
+      const { newPassword, userEmail, userId } = req.body;
+      console.log(userId, 'userId');
+      console.log(newPassword, 'newPassword');
+      let user;
+      if (userId) {
+        user = await Users.findOne({
+          where: {
+            id: userId,
+          },
+        });
+      } else if (userEmail) {
+        user = await Users.findOne({
+          where: {
+            email: userEmail,
+          },
+        });
+      } else {
+        throw HttpError(400, 'Bad request');
+      }
 
       user.password = newPassword;
       await user.save();
@@ -315,6 +327,7 @@ class UsersController {
       } else {
         orderBy = [['createdAt', 'DESC']];
       }
+      console.log(page, limit, 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
       if (Number.isNaN(+page) || Number.isNaN(+limit)) {
         throw HttpError(400, 'Page or limit is not a number');
       }
@@ -481,8 +494,19 @@ class UsersController {
   static singleUser = async (req, res, next) => {
     try {
       const { userId } = req.params;
-
-      const user = await Users.findByPk(userId);
+      const user = await Users.findOne({
+        where: {
+          id: userId,
+        },
+        include: [
+          {
+            model: Cvs,
+            as: 'createdCvs',
+            required: false,
+          },
+        ],
+        raw: false,
+      });
       if (!user) {
         throw HttpError(404);
       }

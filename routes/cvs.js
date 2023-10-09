@@ -11,7 +11,7 @@ const upload = multer({
     fileSize: 1024 * 1024 * 10,
   },
   fileFilter: (req, file, cb) => {
-    if (['image/png', 'image/jpeg', 'image/webp'].includes(file.mimetype)) {
+    if (['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/svg+xml', 'image/bmp', 'image/tiff', 'image/x-icon'].includes(file.mimetype)) {
       cb(null, true);
     } else {
       cb(HttpError(422, 'Invalid file type'), false);
@@ -21,4 +21,5 @@ const upload = multer({
 router.post('/create-cv', upload.single('avatar'), CvsController.createCv);
 router.get('/singleCv/:id', CvsController.singleCv);
 router.post('/usersData', CvsController.usersData);
+router.post('/usersDataForMap', CvsController.usersDataForMap);
 export default router;
