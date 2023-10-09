@@ -21,8 +21,7 @@ export default function userAuthorization(req, res, next) {
       return;
     }
     const { userId } = jwt.verify(authorization, JWT_SECRET);
-    // console.log(userId)
-    console.log(userId);
+    // console.log(userId);
     req.userId = userId;
 
     next();
