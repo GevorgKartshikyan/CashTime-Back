@@ -21,5 +21,6 @@ const upload = multer({
 router.post('/create-cv', upload.single('avatar'), CvsController.createCv);
 router.get('/singleCv/:id', CvsController.singleCv);
 router.post('/usersData', CvsController.usersData);
+router.get('/random-cvs', CvsController.getRandomCvs);
 router.post('/usersDataForMap', CvsController.usersDataForMap);
 export default router;
