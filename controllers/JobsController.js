@@ -23,9 +23,9 @@ class JobsController {
       const where = {
         status: 'active',
         alreadyDone: false,
-        // userId: {
-        //   $ne: userId,
-        // },
+        userId: {
+          $ne: userId,
+        },
       };
       if (jobNotices) {
         const noShowWorks = jobNotices.map((e) => e.noticeJobTo);

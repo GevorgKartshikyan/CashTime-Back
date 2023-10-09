@@ -5,6 +5,7 @@ import HttpError from 'http-errors';
 import { Op } from 'sequelize';
 import Cvs from '../models/Cvs';
 import Users from '../models/Users';
+import { Notification } from '../models/index';
 
 class CvsController {
   static createCv = async (req, res, next) => {
@@ -137,6 +138,16 @@ class CvsController {
         console.log(location);
         where.city = { $like: `${location}%` };
       }
+      const userNotices = await Notification.findAll({
+        where: {
+          noticeFrom: userId,
+        },
+      });
+      if (userNotices) {
+        const noShowWorks = userNotices.map((e) => e.noticeTo);
+        const uniqId = [...new Set(noShowWorks)];
+        where.id = { $notIn: uniqId };
+      }
       const users = await Users.findAll({
         where,
         limit: +limit,
@@ -186,6 +197,16 @@ class CvsController {
       };
       if (city) {
         where.city = city;
+      }
+      const userNotices = await Notification.findAll({
+        where: {
+          noticeFrom: userId,
+        },
+      });
+      if (userNotices) {
+        const noShowWorks = userNotices.map((e) => e.noticeTo);
+        const uniqId = [...new Set(noShowWorks)];
+        where.id = { $notIn: uniqId };
       }
       const users = await Users.findAll({
         where,
