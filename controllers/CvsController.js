@@ -2,7 +2,7 @@ import path from 'path';
 import fs from 'fs';
 import { v4 as uuidV4 } from 'uuid';
 import HttpError from 'http-errors';
-import { Op } from 'sequelize';
+import { Op, Sequelize } from 'sequelize';
 import Cvs from '../models/Cvs';
 import Users from '../models/Users';
 import { Notification } from '../models/index';
@@ -227,6 +227,30 @@ class CvsController {
       });
     } catch (e) {
       console.error(e);
+      next(e);
+    }
+  };
+
+  static getRandomCvs = async (req, res, next) => {
+    try {
+      const randomUsers = await Cvs.findAll({
+        include: [
+          {
+            model: Users,
+            as: 'creator',
+            attributes: ['firstName', 'lastName', 'avatar', 'id'],
+          },
+        ],
+        raw: true,
+        nest: false,
+        order: Sequelize.literal('RAND()'),
+        limit: 3,
+      });
+      res.json({
+        randomUsers,
+        status: 'ok',
+      });
+    } catch (e) {
       next(e);
     }
   };

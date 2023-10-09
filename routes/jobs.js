@@ -29,5 +29,6 @@ router.post('/job-delete', JobsController.deleteJob);
 router.get('/job-singe-info', JobsController.singleJobInfo);
 router.get('/user-job-info', JobsController.userSingleJobInfo);
 router.get('/jobs-title', JobsController.jobsTitles);
+router.get('/random-jobs', JobsController.getRandomJobs);
 router.post('/job-edit', upload.single('jobImage'), JobsController.editJob);
 export default router;

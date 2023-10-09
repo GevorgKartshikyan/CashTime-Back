@@ -2,6 +2,7 @@ import path from 'path';
 import fs from 'fs';
 import { v4 as uuidV4 } from 'uuid';
 import HttpError from 'http-errors';
+import { Sequelize } from 'sequelize';
 import { Users, Jobs, Notification } from '../models/index';
 
 class JobsController {
@@ -443,6 +444,24 @@ class JobsController {
       res.json({
         status: 'ok',
         userJob,
+      });
+    } catch (e) {
+      next(e);
+    }
+  };
+
+  static getRandomJobs = async (req, res, next) => {
+    try {
+      const randomJobs = await Jobs.findAll({
+        where: {
+          status: 'active',
+        },
+        order: Sequelize.literal('RAND()'),
+        limit: 3,
+      });
+      res.json({
+        status: 'ok',
+        randomJobs,
       });
     } catch (e) {
       next(e);
