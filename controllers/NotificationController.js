@@ -115,12 +115,12 @@ class NotificationController {
 
   static noticeList = async (req, res, next) => {
     try {
-      const { userId } = req;
+      const { userId = 5 } = req;
       const { page = 1, limit = 5 } = req.query;
       const offset = (page - 1) * limit;
       const notices = await Notification.findAll({
         where: {
-          noticeTo: userId,
+          noticeTo: userId || 5,
           done: false,
         },
         offset,
@@ -140,6 +140,7 @@ class NotificationController {
           },
         ],
         raw: true,
+        nest: true,
       });
       const count = await Notification.count({
         where: {
