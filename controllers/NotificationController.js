@@ -165,11 +165,17 @@ class NotificationController {
       const { userId } = req;
       const { page = 1, limit = 5, jobId } = req.query;
       const offset = (page - 1) * limit;
-      console.log(jobId, 9999999999);
-      const { count, rows: notices } = await Notification.findAndCountAll({
+      const count = await Notification.count({
         where: {
           noticeTo: userId,
-          done: false,
+          // done: false,
+          noticeJobTo: jobId,
+        },
+      });
+      const notices = await Notification.findAll({
+        where: {
+          noticeTo: userId,
+          // done: false,
           noticeJobTo: jobId,
         },
         offset,
