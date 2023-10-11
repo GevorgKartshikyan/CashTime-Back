@@ -22,6 +22,11 @@ Messages.init({
   change: {
     type: DataTypes.BOOLEAN,
   },
+  type: {
+    type: DataTypes.ENUM('text', 'voice', 'video'),
+    allowNull: false,
+    defaultValue: 'text',
+  },
 }, {
   sequelize,
   modelName: 'messages',

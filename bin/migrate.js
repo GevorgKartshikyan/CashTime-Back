@@ -1,5 +1,6 @@
 import {
-  Users, Jobs, Cvs, Messages, Reports, Countries, SkillsBase, Notification, Admin
+  Users, Jobs, Cvs, Messages, Reports, Countries,
+  SkillsBase, Notification, Admin, Files,
 } from '../models/index';
 
 async function main() {
@@ -12,6 +13,7 @@ async function main() {
   await SkillsBase.sync({ alter: true });
   await Notification.sync({ alter: true });
   await Admin.sync({ alter: true });
+  await Files.sync({ alter: true });
   process.exit(0);
 }
 
