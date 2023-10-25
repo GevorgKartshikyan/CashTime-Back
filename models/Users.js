@@ -89,6 +89,10 @@ Users.init({
     type: DataTypes.STRING,
     allowNull: true,
   },
+  type: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
   totalJobs: {
     type: DataTypes.BIGINT.UNSIGNED,
     defaultValue: 0,

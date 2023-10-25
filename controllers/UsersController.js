@@ -27,7 +27,6 @@ class UsersController {
         confirmPassword,
         type,
       } = req.body;
-      console.log(req.body, 'body');
       let location = null;
       let city = null;
       let country = null;
@@ -108,6 +107,7 @@ class UsersController {
         role,
         validationCode,
         status: type ? 'active' : 'pending',
+        type: type ? 'google' : 'ordinary',
         avatar,
       });
       let token;
@@ -522,7 +522,6 @@ class UsersController {
   static profile = async (req, res, next) => {
     try {
       const { userId } = req;
-      console.log(userId, 'aaaaaaaaa');
       const user = await Users.findOne({
         where: {
           id: userId,

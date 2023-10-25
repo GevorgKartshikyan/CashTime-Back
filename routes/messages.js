@@ -28,7 +28,7 @@ const upload = multer({
   },
 });
 
-router.post('/send', upload.array('files[]', 12), MessagesController.send);
+router.post('/send', upload.array('files[]'), MessagesController.send);
 router.get('/list', MessagesController.list);
 router.put('/open', MessagesController.open);
 router.put('/typing', MessagesController.friendTyping);
