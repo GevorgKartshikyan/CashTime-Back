@@ -1,6 +1,7 @@
 import { DataTypes, Model } from 'sequelize';
 import sequelize from '../services/sequelize';
 import Messages from './Messages';
+import Reviews from './Reviews.js';
 
 class Files extends Model {
 
@@ -56,4 +57,23 @@ Messages.hasOne(Files, {
   onDelete: 'cascade',
 });
 
+Files.belongsTo(Reviews, {
+  foreignKey: 'reviewId',
+  as: 'reviewFiles',
+  onUpdate: 'cascade',
+  onDelete: 'cascade',
+});
+Reviews.hasMany(Files, {
+  foreignKey: 'reviewId',
+  as: 'files',
+  onUpdate: 'cascade',
+  onDelete: 'cascade',
+});
+
+Reviews.hasOne(Files, {
+  foreignKey: 'reviewId',
+  as: 'file',
+  onUpdate: 'cascade',
+  onDelete: 'cascade',
+});
 export default Files;

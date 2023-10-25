@@ -18,8 +18,12 @@ Notification.init({
     defaultValue: false,
   },
   method: {
-    type: DataTypes.ENUM('job', 'freelancer'),
+    type: DataTypes.ENUM('job', 'freelancer', 'review'),
     allowNull: false,
+  },
+  seen: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
   },
 }, {
   sequelize,

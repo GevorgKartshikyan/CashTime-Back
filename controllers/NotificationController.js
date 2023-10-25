@@ -52,7 +52,6 @@ class NotificationController {
     try {
       const { id, noticeJobTo } = req.body.data;
       const { userId } = req;
-      console.log(id, noticeJobTo);
       const where = {
         id,
         noticeTo: userId,
@@ -82,11 +81,11 @@ class NotificationController {
         id, noticeJobTo, friendId, messageText,
       } = req.body.data;
       const { userId } = req;
-      console.log(id, noticeJobTo, userId, 9999999);
       const where = {
         id,
         noticeTo: userId,
         done: false,
+        seen: false,
       };
       if (noticeJobTo) {
         where.noticeJobTo = noticeJobTo;
@@ -97,7 +96,7 @@ class NotificationController {
       if (!notice) {
         throw HttpError(404, 'notification not found');
       }
-      notice.done = true;
+      notice.seen = true;
       await Messages.create({
         text: messageText,
         to: friendId,
@@ -122,6 +121,7 @@ class NotificationController {
         where: {
           noticeTo: userId || 5,
           done: false,
+          seen: false,
         },
         offset,
         limit: +limit,
@@ -145,6 +145,7 @@ class NotificationController {
         where: {
           noticeTo: userId,
           done: false,
+          seen: false,
         },
       });
       const totalPages = Math.ceil(count / limit);
@@ -168,15 +169,17 @@ class NotificationController {
       const count = await Notification.count({
         where: {
           noticeTo: userId,
-          // done: false,
+          done: false,
           noticeJobTo: jobId,
+          // seen: false,
         },
       });
       const notices = await Notification.findAll({
         where: {
           noticeTo: userId,
-          // done: false,
+          done: false,
           noticeJobTo: jobId,
+          // seen: false,
         },
         offset,
         limit: +limit,

@@ -8,3 +8,4 @@ export { default as SkillsBase } from './SkillsBase';
 export { default as Notification } from './Notification';
 export { default as Admin } from './Admin';
 export { default as Files } from './Files';
+export { default as Reviews } from './Reviews';
