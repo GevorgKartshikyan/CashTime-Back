@@ -1,7 +1,7 @@
 import { DataTypes, Model } from 'sequelize';
 import sequelize from '../services/sequelize';
 import Messages from './Messages';
-import Reviews from './Reviews.js';
+import Reviews from './Reviews';
 
 class Files extends Model {
 

@@ -13,8 +13,8 @@ async function main() {
   await SkillsBase.sync({ alter: true });
   await Notification.sync({ alter: true });
   await Admin.sync({ alter: true });
-  await Files.sync({ alter: true });
   await Reviews.sync({ alter: true });
+  await Files.sync({ alter: true });
   process.exit(0);
 }
 
