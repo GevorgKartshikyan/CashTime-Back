@@ -308,6 +308,54 @@ class UsersController {
     }
   };
 
+  static deleteProfileGoogle = async (req, res, next) => {
+    try {
+      const { userId } = req;
+      const user = await Users.findOne({
+        where: {
+          id: userId,
+        },
+      });
+      const { email, firstName, lastName } = user;
+
+      const validationCode = _.random(1000, 9999);
+
+      await Mail.send(email, 'Delete Profile', 'userDeleteProfile', {
+        email,
+        firstName,
+        lastName,
+        validationCode,
+      });
+
+      res.json({
+        status: 'ok',
+        validationCode,
+      });
+    } catch (e) {
+      next(e);
+    }
+  };
+
+  static deleteProfileGoogleConfirm = async (req, res, next) => {
+    try {
+      const { userId } = req;
+      const user = await Users.findOne({
+        where: {
+          id: userId,
+        },
+      });
+      user.status = 'deleted';
+      await user.save();
+
+      res.json({
+        status: 'ok',
+        user,
+      });
+    } catch (e) {
+      next(e);
+    }
+  };
+
   static list = async (req, res, next) => {
     const { userId } = req;
     try {
