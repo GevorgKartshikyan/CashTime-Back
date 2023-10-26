@@ -23,6 +23,8 @@ router.post('/register', upload.single('avatar'), UsersController.register);
 router.post('/login', UsersController.login);
 router.post('/activate', UsersController.activate);
 router.post('/deleteProfile', UsersController.deleteProfile);
+router.get('/deleteProfileGoogle', UsersController.deleteProfileGoogle);
+router.delete('/deleteProfileGoogleConfirm', UsersController.deleteProfileGoogleConfirm);
 router.post('/resetPassword', UsersController.resetPassword);
 router.post('/resetPasswordConfirm', UsersController.resetPasswordConfirm);
 router.get('/list', UsersController.list);
