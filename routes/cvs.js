@@ -21,4 +21,5 @@ const upload = multer({
 router.post('/create-cv', upload.single('avatar'), CvsController.createCv);
 router.get('/singleCv/:id', CvsController.singleCv);
 router.post('/usersData', CvsController.usersData);
+router.put('/edit-cv-link', CvsController.addCvLink);
 export default router;

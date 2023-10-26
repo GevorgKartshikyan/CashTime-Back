@@ -42,6 +42,11 @@ Cvs.init({
     allowNull: true,
     default: '',
   },
+  link: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    default: '',
+  },
   datesAttended: {
     type: DataTypes.STRING,
     allowNull: true,

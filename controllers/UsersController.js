@@ -635,6 +635,8 @@ class UsersController {
     }
   };
 
+
+
   static editProfile = async (req, res, next) => {
     try {
       const { userId } = req;
@@ -664,6 +666,8 @@ class UsersController {
         avatar = path.join(`/images/users/${uuidV4()}_${file.originalname}`);
         const filePath = path.resolve(path.join('public', avatar));
         fs.writeFileSync(filePath, file.buffer);
+      } else {
+        avatar = path.join('/images/users/default-avatar-icon.jpg');
       }
       user.phone = data.phoneNumber;
       if (location) {
@@ -672,12 +676,13 @@ class UsersController {
         user.city = data.address?.city;
       }
       user.avatar = avatar;
-      console.log(data.addSkill, 777);
+
       await user.save();
+      console.log(data.addLanguages, 99999999);
       if (cv) {
         cv.skills = data.addSkill || [];
         cv.phoneNumber = data.phoneNumber;
-        cv.language = data.addLanguages;
+        cv.language = data.addLanguages || [];
         if (location) {
           cv.location = location;
           cv.country = data.address?.country;
