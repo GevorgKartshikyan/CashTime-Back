@@ -81,6 +81,27 @@ class CvsController {
     }
   };
 
+  static addCvLink = async (req, res, next) => {
+    try {
+      const { userId } = req;
+      const data = req.body;
+      const cv = await Cvs.findOne({
+        where: {
+          userId,
+        },
+      });
+      cv.link = data.cvLink;
+      console.log(data.cvLink, 'CVLINK');
+      await cv.save();
+      res.json({
+        cvLink: cv.link,
+        status: 'ok',
+      });
+    } catch (e) {
+      next(e);
+    }
+  };
+
   static singleCv = async (req, res, next) => {
     try {
       const cvId = req.params.id;

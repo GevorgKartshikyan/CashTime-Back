@@ -23,4 +23,6 @@ router.get('/singleCv/:id', CvsController.singleCv);
 router.post('/usersData', CvsController.usersData);
 router.get('/random-cvs', CvsController.getRandomCvs);
 router.post('/usersDataForMap', CvsController.usersDataForMap);
+router.put('/edit-cv-link', CvsController.addCvLink);
+
 export default router;
