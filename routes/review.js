@@ -22,4 +22,6 @@ const upload = multer({
 router.post('/send', upload.array('files[]', 4), ReviewsController.sendReview);
 router.get('/list-in-progress', ReviewsController.reviewsInProgress);
 router.put('/confirm', ReviewsController.confirmReview);
+router.delete('/delete/:id', ReviewsController.cancelReview);
+router.get('/list', ReviewsController.list);
 export default router;
