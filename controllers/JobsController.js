@@ -158,6 +158,7 @@ class JobsController {
         jobPhoto = path.join(`/images/jobs/${uuidV4()}_${file.originalname}`);
         const filePath = path.resolve(path.join('public', jobPhoto));
         fs.writeFileSync(filePath, file.buffer);
+        console.log(filePath, 6999999999);
       } else {
         jobPhoto = path.join('/images/jobs/default-job-image.jpg');
       }
