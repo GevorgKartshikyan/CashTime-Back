@@ -10,7 +10,8 @@ const EXCLUDE = [
   'POST:/users/resetPasswordConfirm',
   'POST:/utils/create-countries',
   'POST:/utils/create-base-skills',
-  'GET:/test',
+  'GET:/cvs/random-cvs',
+  'GET:/jobs//random-jobs',
 ];
 export default function userAuthorization(req, res, next) {
   try {

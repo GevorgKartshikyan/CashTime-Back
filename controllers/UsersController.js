@@ -129,39 +129,47 @@ class UsersController {
       const {
         email,
         password,
-        type,
       } = req.body;
 
-      let user;
-
-      if (!type) {
-        user = await Users.findOne({
-          where: {
-            email,
-            password: Users.passwordHash(password),
-            status: 'active',
+      const ordinaryUser = await Users.findOne({
+        where: {
+          email,
+          password: Users.passwordHash(password),
+          type: 'ordinary',
+          status: {
+            $ne: 'pending',
           },
-        });
-      } else {
-        user = await Users.findOne({
-          where: {
-            email,
+        },
+      });
+      const googleUser = await Users.findOne({
+        where: {
+          email,
+          type: 'google',
+          status: {
+            $ne: 'pending',
           },
-        });
-      }
+        },
+      });
 
-      if (!user) {
+      if (!ordinaryUser && !googleUser) {
         throw HttpError(403, 'Invalid email or password');
       }
 
-      if (user.status === 'block') {
+      if (ordinaryUser?.status === 'block' || googleUser?.status === 'block') {
         throw HttpError(403, 'This user is blocked');
       }
-      const token = jwt.sign({ userId: user.id }, JWT_SECRET);
+      if (ordinaryUser?.status === 'deleted' || googleUser?.status === 'deleted') {
+        throw HttpError(403, 'This user is deleted');
+      }
+
+      const token = jwt.sign({
+        userId:
+          ordinaryUser ? ordinaryUser.id : googleUser.id,
+      }, JWT_SECRET);
 
       res.json({
         status: 'ok',
-        user,
+        user: ordinaryUser || googleUser,
         token,
       });
     } catch (e) {
@@ -699,13 +707,13 @@ class UsersController {
     }
   };
 
-
-
   static editProfile = async (req, res, next) => {
     try {
       const { userId } = req;
       const { file } = req;
       const data = req.body;
+      const { type } = data;
+      console.log(data, 111111);
       const user = await Users.findByPk(userId);
       const cv = await Cvs.findOne({
         where: {
@@ -730,7 +738,7 @@ class UsersController {
         avatar = path.join(`/images/users/${uuidV4()}_${file.originalname}`);
         const filePath = path.resolve(path.join('public', avatar));
         fs.writeFileSync(filePath, file.buffer);
-      } else {
+      } else if (!file && type === 'delete') {
         avatar = path.join('/images/users/default-avatar-icon.jpg');
       }
       user.phone = data.phoneNumber;
@@ -742,7 +750,6 @@ class UsersController {
       user.avatar = avatar;
 
       await user.save();
-      console.log(data.addLanguages, 99999999);
       if (cv) {
         cv.skills = data.addSkill || [];
         cv.phoneNumber = data.phoneNumber;
