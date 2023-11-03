@@ -95,10 +95,12 @@ class ReviewsController {
       const { userId } = req;
       const { id } = req.body;
       const review = await Reviews.findByPk(id, {
-        attributes: ['id'],
+        attributes: ['id', 'rate'],
       });
       review.status = 'active';
       await review.save();
+      console.log(review);
+      // console.log(review.rate, 9999999999);
       const user = await Users.findByPk(userId);
       const reviewCount = await Reviews.count({
         where: {
@@ -106,7 +108,7 @@ class ReviewsController {
           userTo: userId,
         },
       });
-      user.allStars = +user.allStars + review.rate;
+      user.allStars += +review.rate;
       user.stars = +user.allStars / reviewCount;
       user.totalJobs += 1;
       await user.save();
