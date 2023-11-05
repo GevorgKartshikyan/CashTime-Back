@@ -6,8 +6,12 @@ const EXCLUDE = [
   'POST:/users/login',
   'POST:/users/register',
   'POST:/users/activate',
+  'POST:/users/resetPassword',
+  'POST:/users/resetPasswordConfirm',
   'POST:/utils/create-countries',
   'POST:/utils/create-base-skills',
+  'GET:/cvs/random-cvs',
+  'GET:/jobs//random-jobs',
 ];
 export default function userAuthorization(req, res, next) {
   try {
@@ -18,7 +22,7 @@ export default function userAuthorization(req, res, next) {
       return;
     }
     const { userId } = jwt.verify(authorization, JWT_SECRET);
-    // console.log(userId)
+    // console.log(userId);
     req.userId = userId;
 
     next();

@@ -7,6 +7,8 @@ import reports from './reports';
 import utils from './utils';
 import application from './app';
 import notice from './notice';
+import admin from './admin';
+import review from './review';
 
 const router = express.Router();
 
@@ -24,4 +26,6 @@ router.use('/reports', reports);
 router.use('/utils', utils);
 router.use('/app', application);
 router.use('/notice', notice);
+router.use('/admin', admin);
+router.use('/review', review);
 export default router;

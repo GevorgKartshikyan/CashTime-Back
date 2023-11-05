@@ -12,7 +12,7 @@ const upload = multer({
     fileSize: 1024 * 1024 * 10,
   },
   fileFilter: (req, file, cb) => {
-    if (['image/png', 'image/jpeg', 'image/webp , image/svg+xml'].includes(file.mimetype)) {
+    if (['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/svg+xml', 'image/bmp', 'image/tiff', 'image/x-icon'].includes(file.mimetype)) {
       cb(null, true);
     } else {
       cb(HttpError(422, 'Invalid file type'), false);
@@ -24,6 +24,8 @@ router.post('/register', upload.single('avatar'), UsersController.register);
 router.post('/login', UsersController.login);
 router.post('/activate', UsersController.activate);
 router.post('/deleteProfile', UsersController.deleteProfile);
+router.get('/deleteProfileGoogle', UsersController.deleteProfileGoogle);
+router.delete('/deleteProfileGoogleConfirm', UsersController.deleteProfileGoogleConfirm);
 router.post('/resetPassword', UsersController.resetPassword);
 router.post('/resetPasswordConfirm', UsersController.resetPasswordConfirm);
 router.get('/list', UsersController.list);

@@ -27,7 +27,6 @@ class UsersController {
         confirmPassword,
         type,
       } = req.body;
-      console.log(req.body, 'body');
       let location = null;
       let city = null;
       let country = null;
@@ -108,6 +107,7 @@ class UsersController {
         role,
         validationCode,
         status: type ? 'active' : 'pending',
+        type: type ? 'google' : 'ordinary',
         avatar,
       });
       let token;
@@ -129,35 +129,47 @@ class UsersController {
       const {
         email,
         password,
-        type,
       } = req.body;
 
-      let user;
-
-      if (!type) {
-        user = await Users.findOne({
-          where: {
-            email,
-            password: Users.passwordHash(password),
-            status: 'active',
+      const ordinaryUser = await Users.findOne({
+        where: {
+          email,
+          password: Users.passwordHash(password),
+          type: 'ordinary',
+          status: {
+            $ne: 'pending',
           },
-        });
-      } else {
-        user = await Users.findOne({
-          where: {
-            email,
+        },
+      });
+      const googleUser = await Users.findOne({
+        where: {
+          email,
+          type: 'google',
+          status: {
+            $ne: 'pending',
           },
-        });
-      }
+        },
+      });
 
-      if (!user) {
+      if (!ordinaryUser && !googleUser) {
         throw HttpError(403, 'Invalid email or password');
       }
-      const token = jwt.sign({ userId: user.id }, JWT_SECRET);
+
+      if (ordinaryUser?.status === 'block' || googleUser?.status === 'block') {
+        throw HttpError(403, 'This user is blocked');
+      }
+      if (ordinaryUser?.status === 'deleted' || googleUser?.status === 'deleted') {
+        throw HttpError(403, 'This user is deleted');
+      }
+
+      const token = jwt.sign({
+        userId:
+          ordinaryUser ? ordinaryUser.id : googleUser.id,
+      }, JWT_SECRET);
 
       res.json({
         status: 'ok',
-        user,
+        user: ordinaryUser || googleUser,
         token,
       });
     } catch (e) {
@@ -198,9 +210,8 @@ class UsersController {
 
   static resetPassword = async (req, res, next) => {
     try {
-      const { userId } = req;
-      const { userEmail } = req.body;
-
+      const { userEmail, userId } = req.body;
+      console.log(userId);
       let user;
 
       if (userId) {
@@ -209,12 +220,14 @@ class UsersController {
             id: userId,
           },
         });
-      } else {
+      } else if (userEmail) {
         user = await Users.findOne({
           where: {
             email: userEmail,
           },
         });
+      } else {
+        throw HttpError(400, 'Bad request');
       }
 
       if (!user) {
@@ -243,14 +256,25 @@ class UsersController {
 
   static resetPasswordConfirm = async (req, res, next) => {
     try {
-      const { userId } = req;
-      const { newPassword } = req.body;
-
-      const user = await Users.findOne({
-        where: {
-          id: userId,
-        },
-      });
+      const { newPassword, userEmail, userId } = req.body;
+      console.log(userId, 'userId');
+      console.log(newPassword, 'newPassword');
+      let user;
+      if (userId) {
+        user = await Users.findOne({
+          where: {
+            id: userId,
+          },
+        });
+      } else if (userEmail) {
+        user = await Users.findOne({
+          where: {
+            email: userEmail,
+          },
+        });
+      } else {
+        throw HttpError(400, 'Bad request');
+      }
 
       user.password = newPassword;
       await user.save();
@@ -292,6 +316,54 @@ class UsersController {
     }
   };
 
+  static deleteProfileGoogle = async (req, res, next) => {
+    try {
+      const { userId } = req;
+      const user = await Users.findOne({
+        where: {
+          id: userId,
+        },
+      });
+      const { email, firstName, lastName } = user;
+
+      const validationCode = _.random(1000, 9999);
+
+      await Mail.send(email, 'Delete Profile', 'userDeleteProfile', {
+        email,
+        firstName,
+        lastName,
+        validationCode,
+      });
+
+      res.json({
+        status: 'ok',
+        validationCode,
+      });
+    } catch (e) {
+      next(e);
+    }
+  };
+
+  static deleteProfileGoogleConfirm = async (req, res, next) => {
+    try {
+      const { userId } = req;
+      const user = await Users.findOne({
+        where: {
+          id: userId,
+        },
+      });
+      user.status = 'deleted';
+      await user.save();
+
+      res.json({
+        status: 'ok',
+        user,
+      });
+    } catch (e) {
+      next(e);
+    }
+  };
+
   static list = async (req, res, next) => {
     const { userId } = req;
     try {
@@ -301,7 +373,17 @@ class UsersController {
         role = '',
         search,
         id = undefined,
+        order,
       } = req.query;
+      let orderBy;
+      if (order === 'Newest') {
+        orderBy = [['createdAt', 'DESC']];
+      } else if (order === 'Latest') {
+        orderBy = [['createdAt', 'ASC']];
+      } else {
+        orderBy = [['createdAt', 'DESC']];
+      }
+      console.log(page, limit, 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
       if (Number.isNaN(+page) || Number.isNaN(+limit)) {
         throw HttpError(400, 'Page or limit is not a number');
       }
@@ -328,6 +410,7 @@ class UsersController {
       const usersList = await Users.findAll({
         limit: +limit,
         offset,
+        order: orderBy,
         where,
       });
 
@@ -341,6 +424,7 @@ class UsersController {
         }
         await currentUser.save();
       }
+
       console.log(currentUser, 'user');
       const usersForMessages = await Users.findAll({
         where,
@@ -466,8 +550,19 @@ class UsersController {
   static singleUser = async (req, res, next) => {
     try {
       const { userId } = req.params;
-
-      const user = await Users.findByPk(userId);
+      const user = await Users.findOne({
+        where: {
+          id: userId,
+        },
+        include: [
+          {
+            model: Cvs,
+            as: 'createdCvs',
+            required: false,
+          },
+        ],
+        raw: false,
+      });
       if (!user) {
         throw HttpError(404);
       }
@@ -483,7 +578,6 @@ class UsersController {
   static profile = async (req, res, next) => {
     try {
       const { userId } = req;
-      console.log(userId, 'aaaaaaaaa');
       const user = await Users.findOne({
         where: {
           id: userId,
@@ -581,10 +675,11 @@ class UsersController {
         limit = 6,
       } = req.query;
       const offset = (+page - 1) * +limit;
-      const { count, rows: blocked } = await Users.findAndCountAll({
+      const blocked = await Users.findAll({
         where: {
           status: 'block',
         },
+        order: [['createdAt', 'DESC']],
         include: [
           {
             as: 'report',
@@ -595,6 +690,11 @@ class UsersController {
         raw: true,
         limit: +limit,
         offset,
+      });
+      const count = await Users.count({
+        where: {
+          status: 'block',
+        },
       });
       const totalBlockedPages = Math.ceil(count / limit);
       res.json({
@@ -612,6 +712,8 @@ class UsersController {
       const { userId } = req;
       const { file } = req;
       const data = req.body;
+      const { type } = data;
+      console.log(data, 111111);
       const user = await Users.findByPk(userId);
       const cv = await Cvs.findOne({
         where: {
@@ -636,6 +738,8 @@ class UsersController {
         avatar = path.join(`/images/users/${uuidV4()}_${file.originalname}`);
         const filePath = path.resolve(path.join('public', avatar));
         fs.writeFileSync(filePath, file.buffer);
+      } else if (!file && type === 'delete') {
+        avatar = path.join('/images/users/default-avatar-icon.jpg');
       }
       user.phone = data.phoneNumber;
       if (location) {
@@ -644,12 +748,12 @@ class UsersController {
         user.city = data.address?.city;
       }
       user.avatar = avatar;
-      console.log(data.addSkill, 777);
+
       await user.save();
       if (cv) {
         cv.skills = data.addSkill || [];
         cv.phoneNumber = data.phoneNumber;
-        cv.language = data.addLanguages;
+        cv.language = data.addLanguages || [];
         if (location) {
           cv.location = location;
           cv.country = data.address?.country;

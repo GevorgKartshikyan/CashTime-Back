@@ -7,12 +7,13 @@ import Socket from '../services/Socket';
 class NotificationController {
   static sendNotice = async (req, res, next) => {
     try {
-      const { noticeTo, noticeJobTo } = req.body;
+      const { noticeTo, noticeJobTo, method } = req.body;
       const { userId } = req;
       const notice = await Notification.create({
         noticeTo,
         noticeFrom: userId,
         noticeJobTo,
+        method,
       });
       if (!notice) {
         throw HttpError(403, 'aaa');
@@ -51,7 +52,6 @@ class NotificationController {
     try {
       const { id, noticeJobTo } = req.body.data;
       const { userId } = req;
-      console.log(id, noticeJobTo);
       const where = {
         id,
         noticeTo: userId,
@@ -81,11 +81,11 @@ class NotificationController {
         id, noticeJobTo, friendId, messageText,
       } = req.body.data;
       const { userId } = req;
-      console.log(id, noticeJobTo, userId, 9999999);
       const where = {
         id,
         noticeTo: userId,
         done: false,
+        seen: false,
       };
       if (noticeJobTo) {
         where.noticeJobTo = noticeJobTo;
@@ -96,7 +96,7 @@ class NotificationController {
       if (!notice) {
         throw HttpError(404, 'notification not found');
       }
-      notice.done = true;
+      notice.seen = true;
       await Messages.create({
         text: messageText,
         to: friendId,
@@ -114,14 +114,14 @@ class NotificationController {
 
   static noticeList = async (req, res, next) => {
     try {
-      const { userId } = req;
+      const { userId = 5 } = req;
       const { page = 1, limit = 5 } = req.query;
       const offset = (page - 1) * limit;
-      console.log(page, limit);
-      const { count, rows: notices } = await Notification.findAndCountAll({
+      const notices = await Notification.findAll({
         where: {
-          noticeTo: userId,
+          noticeTo: userId || 5,
           done: false,
+          seen: false,
         },
         offset,
         limit: +limit,
@@ -141,6 +141,13 @@ class NotificationController {
         ],
         raw: true,
       });
+      const count = await Notification.count({
+        where: {
+          noticeTo: userId,
+          done: false,
+          seen: false,
+        },
+      });
       const totalPages = Math.ceil(count / limit);
       res.json({
         status: 'ok',
@@ -159,12 +166,20 @@ class NotificationController {
       const { userId } = req;
       const { page = 1, limit = 5, jobId } = req.query;
       const offset = (page - 1) * limit;
-      console.log(jobId, 9999999999);
-      const { count, rows: notices } = await Notification.findAndCountAll({
+      const count = await Notification.count({
         where: {
           noticeTo: userId,
           done: false,
           noticeJobTo: jobId,
+          // seen: false,
+        },
+      });
+      const notices = await Notification.findAll({
+        where: {
+          noticeTo: userId,
+          done: false,
+          noticeJobTo: jobId,
+          // seen: false,
         },
         offset,
         limit: +limit,

@@ -2,6 +2,7 @@ import path from 'path';
 import fs from 'fs';
 import { v4 as uuidV4 } from 'uuid';
 import HttpError from 'http-errors';
+import { Sequelize } from 'sequelize';
 import { Users, Jobs, Notification } from '../models/index';
 
 class JobsController {
@@ -50,7 +51,6 @@ class JobsController {
       const maxPriceFixed = +jobType.salary_max;
       const maxPriceHourly = +jobType.hour_max;
       const minPriceHourly = +jobType.hour_min;
-      // eslint-disable-next-line max-len
       if (maxPriceFixed && minPriceFixed && !Number.isNaN(maxPriceFixed) && !Number.isNaN(minPriceFixed) && priceMethod.includes('Project Budget')) {
         where.priceFixed = {
           $between: [minPriceFixed, maxPriceFixed],
@@ -95,7 +95,7 @@ class JobsController {
         orderBy = [['createdAt', 'DESC']];
       }
 
-      const { count, rows: jobs } = await Jobs.findAndCountAll({
+      const jobs = await Jobs.findAll({
         where,
         offset,
         limit: +limit,
@@ -109,6 +109,17 @@ class JobsController {
           },
         ],
         raw: true,
+      });
+      const count = await Jobs.count({
+        where,
+        include: [
+          {
+            model: Users,
+            as: 'creator',
+            attributes: ['firstName', 'lastName', 'avatar'],
+            required: true,
+          },
+        ],
       });
       const totalPages = Math.ceil(count / limit);
       res.json({
@@ -147,6 +158,7 @@ class JobsController {
         jobPhoto = path.join(`/images/jobs/${uuidV4()}_${file.originalname}`);
         const filePath = path.resolve(path.join('public', jobPhoto));
         fs.writeFileSync(filePath, file.buffer);
+        console.log(filePath, 6999999999);
       } else {
         jobPhoto = path.join('/images/jobs/default-job-image.jpg');
       }
@@ -250,7 +262,6 @@ class JobsController {
   static activateJob = async (req, res, next) => {
     try {
       const { jobId } = req.body;
-      console.log(jobId);
       const job = await Jobs.findOne({
         where: {
           id: jobId,
@@ -290,7 +301,12 @@ class JobsController {
     try {
       const { page = 1, limit = 5 } = req.query;
       const offset = (page - 1) * limit;
-      const { count, rows: jobs } = await Jobs.findAndCountAll({
+      const count = await Jobs.count({
+        where: {
+          status: 'pending',
+        },
+      });
+      const jobs = await Jobs.findAll({
         where: {
           status: 'pending',
         },
@@ -320,14 +336,29 @@ class JobsController {
   static jobsListFromUsersMap = async (req, res, next) => {
     try {
       const { city } = req.query;
-      const whereCondition = {
-        alreadyDone: false,
+      const { userId } = req;
+      const jobNotices = await Notification.findAll({
+        where: {
+          noticeFrom: userId,
+        },
+      });
+      const where = {
         status: 'active',
+        alreadyDone: false,
+        userId: {
+          $ne: userId,
+        },
         city,
+
       };
-      const { rows: jobs } = await Jobs.findAndCountAll(
+      if (jobNotices) {
+        const noShowWorks = jobNotices.map((e) => e.noticeJobTo);
+        const uniqId = [...new Set(noShowWorks)];
+        where.id = { $notIn: uniqId };
+      }
+      const jobs = await Jobs.findAll(
         {
-          where: whereCondition,
+          where,
           include: [
             {
               model: Users,
@@ -340,6 +371,7 @@ class JobsController {
         },
       );
       res.json({
+        status: 'ok',
         jobs,
       });
     } catch (e) {
@@ -413,6 +445,24 @@ class JobsController {
       res.json({
         status: 'ok',
         userJob,
+      });
+    } catch (e) {
+      next(e);
+    }
+  };
+
+  static getRandomJobs = async (req, res, next) => {
+    try {
+      const randomJobs = await Jobs.findAll({
+        where: {
+          status: 'active',
+        },
+        order: Sequelize.literal('RAND()'),
+        limit: 3,
+      });
+      res.json({
+        status: 'ok',
+        randomJobs,
       });
     } catch (e) {
       next(e);

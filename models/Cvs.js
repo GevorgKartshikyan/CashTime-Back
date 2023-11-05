@@ -42,6 +42,11 @@ Cvs.init({
     allowNull: true,
     default: '',
   },
+  link: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    default: '',
+  },
   datesAttended: {
     type: DataTypes.STRING,
     allowNull: true,
@@ -53,9 +58,8 @@ Cvs.init({
     default: '',
   },
   hourlyRate: {
-    type: DataTypes.STRING,
+    type: DataTypes.BIGINT,
     allowNull: true,
-    default: '',
   },
   skills: {
     type: DataTypes.JSON,

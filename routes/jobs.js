@@ -11,7 +11,8 @@ const upload = multer({
     fileSize: 1024 * 1024 * 10,
   },
   fileFilter: (req, file, cb) => {
-    if (['image/png', 'image/jpeg', 'image/webp'].includes(file.mimetype)) {
+    if (['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/svg+xml', 'image/bmp', 'image/tiff', 'image/x-icon']
+      .includes(file.mimetype)) {
       cb(null, true);
     } else {
       cb(HttpError(422, 'Invalid file type'), false);
@@ -28,5 +29,6 @@ router.post('/job-delete', JobsController.deleteJob);
 router.get('/job-singe-info', JobsController.singleJobInfo);
 router.get('/user-job-info', JobsController.userSingleJobInfo);
 router.get('/jobs-title', JobsController.jobsTitles);
+router.get('/random-jobs', JobsController.getRandomJobs);
 router.post('/job-edit', upload.single('jobImage'), JobsController.editJob);
 export default router;

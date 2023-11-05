@@ -1,17 +1,37 @@
 import HttpError from 'http-errors';
+import path from 'path';
+import { v4 as uuidV4 } from 'uuid';
+import fs from 'fs';
 import Socket from '../services/Socket';
-import { Messages, Users } from '../models/index';
+import { Messages, Files } from '../models/index';
 
 class MessagesController {
   static send = async (req, res, next) => {
     try {
-      const { userId } = req;
-      const { text = '', friendId } = req.body;
+      const { userId, files } = req;
+      const { type = 'text', text = '', friendId } = req.body;
       const message = await Messages.create({
         text,
+        type,
         to: friendId,
         from: userId,
       });
+      const uploadFiles = files.map((file) => {
+        const fileName = path.join(`/images/uploads/${uuidV4()}_${file.originalname}`);
+        const filePath = path.resolve(path.join('public', fileName));
+        console.log(file);
+        fs.writeFileSync(filePath, file.buffer);
+        // fs.renameSync(file.path, path.resolve(path.join('public/images', filePath)));
+        return {
+          messageId: message.id,
+          path: filePath,
+          name: fileName,
+          type: file.mimetype,
+          size: file.size,
+        };
+      });
+      message.files = await Files.bulkCreate(uploadFiles);
+      message.setDataValue('files', message.files);
       Socket.emitUser(friendId, 'new_message', message);
       res.json({
         status: 'ok',
@@ -27,6 +47,10 @@ class MessagesController {
       const { userId } = req;
       const { friendId } = req.query;
 
+      if (!friendId) {
+        throw HttpError(404, 'Dont found messages');
+      }
+
       const messages = await Messages.findAll({
         where: {
           $or: [
@@ -34,6 +58,11 @@ class MessagesController {
             { to: friendId, from: userId },
           ],
         },
+        include: [{
+          model: Files,
+          as: 'files',
+          required: false,
+        }],
         order: [['createdAt', 'desc']],
       });
 
@@ -55,6 +84,10 @@ class MessagesController {
           id,
           to: userId,
         },
+        include: [{
+          model: Files,
+          as: 'files',
+        }],
       });
       if (!message) {
         throw HttpError(404);
@@ -94,13 +127,10 @@ class MessagesController {
   static friendTyping = async (req, res, next) => {
     try {
       const { isTyping, friendId } = req.body;
-      const friend = await Users.findByPk(friendId);
-      friend.isTyping = isTyping;
-      await friend.save();
-      Socket.emitUser(friendId, 'typing', friend.isTyping);
+      Socket.emitUser(friendId, 'typing', isTyping);
       res.json({
         status: 'ok',
-        isTyping: friend.isTyping,
+        isTyping,
       });
     } catch (e) {
       next(e);

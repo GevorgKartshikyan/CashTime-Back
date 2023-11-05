@@ -110,11 +110,17 @@ class AppController {
       const allEmployers = await Users.count({
         where: {
           role: 'employer',
+          status: {
+            $ne: 'pending',
+          },
         },
       });
       const allEmployees = await Users.count({
         where: {
           role: 'employee',
+          status: {
+            $ne: 'pending',
+          },
         },
       });
 

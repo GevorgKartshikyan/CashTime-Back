@@ -30,6 +30,14 @@ Users.init({
     allowNull: false,
     unique: 'email',
   },
+  stars: {
+    type: DataTypes.DECIMAL(3, 1),
+    defaultValue: 0,
+  },
+  allStars: {
+    type: DataTypes.BIGINT,
+    defaultValue: 0,
+  },
   firstName: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -81,20 +89,18 @@ Users.init({
     type: DataTypes.STRING,
     allowNull: true,
   },
+  type: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
   totalJobs: {
     type: DataTypes.BIGINT.UNSIGNED,
-    allowNull: true,
-    default: 0,
+    defaultValue: 0,
   },
   jobsInProgress: {
     type: DataTypes.BIGINT.UNSIGNED,
     allowNull: true,
     default: 0,
-  },
-  isTyping: {
-    type: DataTypes.BOOLEAN,
-    allowNull: false,
-    defaultValue: false,
   },
 }, {
   sequelize,
