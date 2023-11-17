@@ -6,6 +6,18 @@ import { Sequelize } from 'sequelize';
 import { Users, Jobs, Notification } from '../models/index';
 
 class JobsController {
+  static test = async (req, res, next) => {
+    try {
+      const { file } = req;
+      console.log(file);
+      res.json({
+        status: 'ok',
+      });
+    } catch (e) {
+      next(e);
+    }
+  };
+
   static jobsListFromUsersBox = async (req, res, next) => {
     try {
       const {
@@ -135,6 +147,8 @@ class JobsController {
   static createJob = async (req, res, next) => {
     try {
       const { file, userId } = req;
+      console.log(file, 'file');
+      console.log(req.body, '99999999');
       const body = JSON.parse(req.body.data);
       const {
         dataFromChild1: title,
