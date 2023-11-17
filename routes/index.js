@@ -9,6 +9,7 @@ import application from './app';
 import notice from './notice';
 import admin from './admin';
 import review from './review';
+import test from './test';
 
 const router = express.Router();
 
@@ -18,6 +19,7 @@ router.get('/', (req, res, next) => { // eslint-disable-line no-unused-vars
     status: 'ok',
   });
 });
+router.use('/test', test);
 router.use('/users', users);
 router.use('/jobs', jobs);
 router.use('/messages', messages);
