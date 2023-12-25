@@ -792,16 +792,26 @@ class UsersController {
     try {
       const { userId } = req;
       const { data } = req.body;
+      let updatedCv = {};
+      let newCv = {};
       const cv = await Cvs.findOne({
         where: {
           userId,
         },
       });
-      cv.bio = data.bio;
-      console.log(data.bio);
-      const updatedCv = await cv.save();
+      if (!cv) {
+        newCv = await Cvs.create({
+          userId,
+          bio: data.bio,
+        });
+      } else {
+        cv.bio = data.bio;
+        updatedCv = await cv.save();
+      }
+
       res.json({
         updatedCv,
+        newCv,
       });
     } catch (e) {
       next(e);
