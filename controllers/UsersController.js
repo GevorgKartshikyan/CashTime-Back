@@ -27,6 +27,17 @@ class UsersController {
         confirmPassword,
         type,
       } = req.body;
+      console.log(
+        email,
+        password,
+        firstName,
+        lastName,
+        phone,
+        address,
+        confirmPassword,
+        type,
+        role,
+      );
       let location = null;
       let city = null;
       let country = null;
@@ -141,6 +152,19 @@ class UsersController {
           },
         },
       });
+      // let user;
+      //
+      // console.log(req.body);
+
+      // if (!type) {
+      //   user = await Users.findOne({
+      //     where: {
+      //       email,
+      //       password: Users.passwordHash(password),
+      //       status: 'active',
+      //     },
+      //   },
+      // });
       const googleUser = await Users.findOne({
         where: {
           email,
@@ -211,7 +235,6 @@ class UsersController {
   static resetPassword = async (req, res, next) => {
     try {
       const { userEmail, userId } = req.body;
-      console.log(userId);
       let user;
 
       if (userId) {
@@ -232,6 +255,10 @@ class UsersController {
 
       if (!user) {
         throw HttpError(401, 'Wrong email');
+      }
+
+      if (user.type === 'google') {
+        throw HttpError(401, 'Registered in google account');
       }
 
       const { email, firstName, lastName } = user;
@@ -257,8 +284,6 @@ class UsersController {
   static resetPasswordConfirm = async (req, res, next) => {
     try {
       const { newPassword, userEmail, userId } = req.body;
-      console.log(userId, 'userId');
-      console.log(newPassword, 'newPassword');
       let user;
       if (userId) {
         user = await Users.findOne({

@@ -40,7 +40,7 @@ Jobs.init({
     allowNull: true,
   },
   priceMethod: {
-    type: DataTypes.ENUM('Project Budget', 'Hourly Rate'),
+    type: DataTypes.TEXT,
     allowNull: true,
     default: '',
   },
